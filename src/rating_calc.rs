@@ -66,14 +66,14 @@ pub fn calculate_player_skillset_rating_pre_070(ssrs: &[f32]) -> f32 {
 	calc_rating(ssrs, 1.04, 0.1)
 }
 
-/// https://github.com/etternagame/etterna/blob/0b7a28d2371798a8138e78e5789d0014b16b4534/src/Etterna/MinaCalc/MinaCalc.cpp#L194-L199
-/// https://github.com/etternagame/etterna/blob/0b7a28d2371798a8138e78e5789d0014b16b4534/src/Etterna/MinaCalc/MinaCalcHelpers.h#L40-L58
-pub fn calculate_score_overall(skillsets: &[f32; 7]) -> f32 {
+/// https://github.com/etternagame/etterna/blob/0b7a28d2371798a8138e78e5789d0014b16b4534/src/Etterna/Singletons/ScoreManager.cpp#L763-L806
+pub fn calculate_player_overall(skillsets: &[f32; 7]) -> f32 {
 	calc_rating(skillsets, 1.125, 0.1)
 }
 
-/// https://github.com/etternagame/etterna/blob/0b7a28d2371798a8138e78e5789d0014b16b4534/src/Etterna/Singletons/ScoreManager.cpp#L763-L806
-pub fn calculate_player_overall(skillsets: &[f32; 7]) -> f32 {
+/// https://github.com/etternagame/etterna/blob/0b7a28d2371798a8138e78e5789d0014b16b4534/src/Etterna/MinaCalc/MinaCalc.cpp#L194-L199
+/// https://github.com/etternagame/etterna/blob/0b7a28d2371798a8138e78e5789d0014b16b4534/src/Etterna/MinaCalc/MinaCalcHelpers.h#L40-L58
+pub fn calculate_score_overall(skillsets: &[f32; 7]) -> f32 {
 	calc_rating(skillsets, 1.11, 0.25)
 }
 

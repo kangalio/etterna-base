@@ -38,6 +38,25 @@ macro_rules! impl_get8 {
 				}
 			}
 		}
+	};
+	($struct_type:ty, $return_type:ty, $self_:ident, $overall_getter:expr, $overall_getter_pre_070:expr) => {
+		crate::impl_get8!($struct_type, $return_type, $self_, $overall_getter);
+
+		impl $struct_type {
+			pub fn get_pre_070(&self, skillset: impl Into<Skillset8>) -> $return_type {
+				let $self_ = self;
+				match skillset.into() {
+					Skillset8::Overall => $overall_getter_pre_070,
+					Skillset8::Stream => self.stream,
+					Skillset8::Jumpstream => self.jumpstream,
+					Skillset8::Handstream => self.handstream,
+					Skillset8::Stamina => self.stamina,
+					Skillset8::Jackspeed => self.jackspeed,
+					Skillset8::Chordjack => self.chordjack,
+					Skillset8::Technical => self.technical,
+				}
+			}
+		}
 	}
 }
 

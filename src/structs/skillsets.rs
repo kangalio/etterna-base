@@ -12,7 +12,7 @@ pub struct ChartSkillsets {
 	pub chordjack: f32,
 	pub technical: f32,
 }
-crate::impl_get8!(ChartSkillsets, f32, a, a.overall());
+crate::impl_get8!(ChartSkillsets, f32, a, a.overall(), a.overall_pre_070());
 
 impl ChartSkillsets {
 	/// Return the overall skillset, as derived from the 7 individual skillsets
@@ -62,7 +62,7 @@ pub struct UserSkillsets {
 	pub chordjack: f32,
 	pub technical: f32,
 }
-crate::impl_get8!(UserSkillsets, f32, a, a.overall());
+crate::impl_get8!(UserSkillsets, f32, a, a.overall(), a.overall_pre_070());
 
 impl UserSkillsets {
 	/// Return the overall skillset, as derived from the 7 individual skillsets
