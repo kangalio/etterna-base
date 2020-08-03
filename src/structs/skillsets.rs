@@ -1,82 +1,5 @@
 use std::convert::{TryFrom, TryInto};
 
-mod calc_rating {
-	fn erfc(x: f32) -> f32 { libm::erfc(x as f64) as f32 }
-	
-	fn is_rating_okay(rating: f32, ssrs: &[f32], delta_multiplier: f32) -> bool {
-		let max_power_sum = 2f32.powf(rating / 10.0);
-		
-		let power_sum: f32 = ssrs.iter()
-				.map(|&ssr| 2.0 / erfc(delta_multiplier * (ssr - rating)) - 2.0)
-				.filter(|&x| x > 0.0)
-				.sum();
-		
-		power_sum < max_power_sum
-	}
-	
-	/*
-	The idea is the following: we try out potential skillset rating values
-	until we've found the lowest rating that still fits (I've called that
-	property 'okay'-ness in the code).
-	How do we know whether a potential skillset rating fits? We give each
-	score a "power level", which is larger when the skillset rating of the
-	specific score is high. Therefore, the user's best scores get the
-	highest power levels.
-	Now, we sum the power levels of each score and check whether that sum
-	is below a certain limit. If it is still under the limit, the rating
-	fits (is 'okay'), and we can try a higher rating. If the sum is above
-	the limit, the rating doesn't fit, and we need to try out a lower
-	rating.
-	*/
-
-	fn calc_rating(
-		ssrs: &[f32],
-		num_iters: u32,
-		add_res_x2: bool,
-		final_multiplier: f32,
-		delta_multiplier: f32, // no idea if this is a good name
-	) -> f32 {
-		let mut rating: f32 = 0.0;
-		let mut resolution: f32 = 10.24;
-		
-		// Repeatedly approximate the final rating, with better resolution
-		// each time
-		for _ in 0..num_iters {
-			// Find lowest 'okay' rating with certain resolution
-			while !is_rating_okay(rating + resolution, ssrs, delta_multiplier) {
-				rating += resolution;
-			}
-			
-			// Now, repeat with smaller resolution for better approximation
-			resolution /= 2.0;
-		}
-		
-		if add_res_x2 {
-			rating += resolution * 2.0;
-		}
-		rating * final_multiplier
-	}
-
-	// pub fn idk_this_was_previously(ssrs: &[f32]) -> f32 {
-	// 	// not sure if these params are correct; I didn't test them because I don't wannt spend the
-	// 	// time and effort to find the old C++ implementation to compare
-	// 	calc_rating(ssrs, 10, false, 1.04, 0.1)
-	// }
-
-	pub fn calculate_chart_overall(skillsets: &[f32]) -> f32 {
-		calc_rating(skillsets, 11, true, 1.11, 0.25)
-	}
-
-	pub fn calculate_player_overall(skillsets: &[f32]) -> f32 {
-		calc_rating(skillsets, 11, true, 1.0, 0.1)
-	}
-
-	// not needed rn
-	// pub fn calculate_player_skillset_rating(skillsets: &[f32]) -> f32 {
-	// 	calc_rating(skillsets, 11, true, 1.0, 0.1)
-	// }
-}
-
 /// Skillset information. Used for chart specific difficulty, i.e. MSD and SSR
 #[derive(Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -94,7 +17,7 @@ crate::impl_get8!(ChartSkillsets, f32, a, a.overall());
 impl ChartSkillsets {
 	/// Return the overall skillset, as derived from the 7 individual skillsets
 	pub fn overall(&self) -> f32 {
-		let aggregated_skillsets = calc_rating::calculate_chart_overall(&[
+		let aggregated_skillsets = crate::rating_calc::calculate_score_overall(&[
 			self.stream,
 			self.jumpstream,
 			self.handstream,
@@ -112,6 +35,18 @@ impl ChartSkillsets {
 			.max(self.technical);
 		
 		aggregated_skillsets.max(max_skillset)
+	}
+
+	/// Return the overall skillset with the pre-0.70 formula, as derived from the 7 individual
+	/// skillsets
+	pub fn overall_pre_070(&self) -> f32 {
+		self.stream
+			.max(self.jumpstream)
+			.max(self.handstream)
+			.max(self.stamina)
+			.max(self.jackspeed)
+			.max(self.chordjack)
+			.max(self.technical)
 	}
 }
 
@@ -132,7 +67,7 @@ crate::impl_get8!(UserSkillsets, f32, a, a.overall());
 impl UserSkillsets {
 	/// Return the overall skillset, as derived from the 7 individual skillsets
 	pub fn overall(&self) -> f32 {
-		calc_rating::calculate_player_overall(&[
+		crate::rating_calc::calculate_player_overall(&[
 			self.stream,
 			self.jumpstream,
 			self.handstream,
@@ -141,6 +76,19 @@ impl UserSkillsets {
 			self.chordjack,
 			self.technical,
 		])
+	}
+
+	/// Return the overall skillset with the pre-0.70 formula, as derived from the 7 individual
+	/// skillsets
+	pub fn overall_pre_070(&self) -> f32 {
+		let sum = self.stream
+			+ self.jumpstream
+			+ self.handstream
+			+ self.stamina
+			+ self.jackspeed
+			+ self.chordjack
+			+ self.technical;
+		sum / 7.0
 	}
 }
 
@@ -166,10 +114,15 @@ impl Skillset7 {
 		}
 	}
 
-	/// Iterate over all skillsets
+	/// Get a list of all skillsets
+	pub fn list() -> &'static [Self] {
+		&[Self::Stream, Self::Jumpstream, Self::Handstream, Self::Stamina, Self::Jackspeed,
+			Self::Chordjack, Self::Technical]
+	}
+
+	/// Iterate all skillsets
 	pub fn iter() -> impl Iterator<Item=Self> {
-		[Self::Stream, Self::Jumpstream, Self::Handstream, Self::Stamina, Self::Jackspeed,
-			Self::Chordjack, Self::Technical].iter().copied()
+		Self::list().iter().copied()
 	}
 
 	pub fn into_skillset8(self) -> Skillset8 {
@@ -227,10 +180,15 @@ impl Skillset8 {
 		}
 	}
 
-	/// Iterate over all skillsets
+	/// Get a list of all skillsets
+	pub fn list() -> &'static [Self] {
+		&[Self::Overall, Self::Stream, Self::Jumpstream, Self::Handstream, Self::Stamina,
+			Self::Jackspeed, Self::Chordjack, Self::Technical]
+	}
+
+	/// Iterate all skillsets
 	pub fn iter() -> impl Iterator<Item=Self> {
-		[Self::Overall, Self::Stream, Self::Jumpstream, Self::Handstream, Self::Stamina,
-			Self::Jackspeed, Self::Chordjack, Self::Technical].iter().copied()
+		Self::list().iter().copied()
 	}
 
 	pub fn into_skillset7(self) -> Option<Skillset7> {

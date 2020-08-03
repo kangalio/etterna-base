@@ -1,5 +1,4 @@
 use super::{ScoringSystem, ScoringResult};
-use crate::Wife;
 
 const DEBUG: bool = false;
 
