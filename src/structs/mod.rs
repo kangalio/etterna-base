@@ -128,13 +128,13 @@ impl Rate {
 
 impl std::fmt::Display for Rate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}x", self.x20 as f32 / 20.0)
+        write!(f, "{:.2}x", self.x20 as f32 / 20.0)
     }
 }
 
 impl std::fmt::Debug for Rate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}x", self.x20 as f32 / 20.0)
+        write!(f, "({} / 20.0)x", self.x20)
     }
 }
 
