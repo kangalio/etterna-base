@@ -137,7 +137,7 @@ unsafe fn column_rescore<W: crate::Wife>(mut notes: Vec<Note>, mut hits: Vec<Hit
 	wifescore_sum += W::MISS_WEIGHT * num_misses as f32;
 	wifescore_sum += stray_tap_weight * num_stray_taps as f32;
 	
-	return (wifescore_sum, num_judged_notes as u64);
+	(wifescore_sum, num_judged_notes as u64)
 }
 
 /// Scoring system that assigns hits to notes by trying to find the optimal mapping between the two,
@@ -149,14 +149,14 @@ pub struct MatchingScorer;
 
 impl ScoringSystem for MatchingScorer {
 	fn evaluate<W: crate::Wife>(note_seconds: &[f32], hit_seconds: &[f32]) -> ScoringResult {
-		let notes: Vec<Note> = note_seconds.into_iter()
+		let notes: Vec<Note> = note_seconds.iter()
 				.map(|&second| Note { second, assigned_hit: None })
 				.collect();
-		let hits: Vec<Hit> = hit_seconds.into_iter()
+		let hits: Vec<Hit> = hit_seconds.iter()
 				.map(|&second| Hit { second, assigned_note: None })
 				.collect();
 		
 		let (wifescore_sum, num_judged_notes) = unsafe { column_rescore::<W>(notes, hits) };
-		return ScoringResult { wifescore_sum, num_judged_notes };
+		ScoringResult { wifescore_sum, num_judged_notes }
 	}
 }

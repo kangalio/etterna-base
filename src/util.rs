@@ -51,7 +51,7 @@ impl<'a> Iterator for SplitNewlines<'a> {
 		let line = &self.bytes[start_pos..self.current_pos];
 		
 		self.current_pos += 1; // Advance one to be on the start of a line again
-		return Some(line);
+		Some(line)
 	}
 }
 
@@ -68,7 +68,7 @@ impl<'a, I: Iterator> Iterator for CountInto<'a, I> {
 		if item.is_some() {
 			*self.count_variable += 1;
 		}
-		return item;
+		item
 	}
 }
 
@@ -81,15 +81,15 @@ impl<I: Iterator> MyItertools for I {
 	// This function counts the number of elements in the iterator without consuming the iterator
 	fn count_into(self, count_variable: &mut usize) -> CountInto<Self> {
 		*count_variable = 0;
-		return CountInto { iterator: self, count_variable };
+		CountInto { iterator: self, count_variable }
 	}
 }
 
 // Like slice.split(b'\n'), but with optimizations based on a minimum line length assumption
 // When min_line_length is zero, the expected result for "xxx\n" would be ["xxx", ""]. However,
 // the result is gonna be just ["xxx"]. I know it's unintuitive, but I dunno how to fix
-pub fn split_newlines<'a>(bytes: &'a [u8], min_line_length: usize) -> SplitNewlines<'a> {
-	return SplitNewlines { bytes, min_line_length, current_pos: 0 };
+pub fn split_newlines(bytes: &[u8], min_line_length: usize) -> SplitNewlines<'_> {
+	SplitNewlines { bytes, min_line_length, current_pos: 0 }
 }
 
 // Extracts a string based on a prefix and a postfix. If prefix or postfix couldn't be found,
@@ -100,7 +100,7 @@ pub fn extract_str<'a>(string: &'a str, before: &str, after: &str) -> Option<&'a
 	
 	let end_index = start_index + twoway::find_str(&string[start_index..], after)?;
 	
-	return Some(&string[start_index..end_index]);
+	Some(&string[start_index..end_index])
 }
 
 // The cooler ~~daniel~~ extract_str
@@ -110,12 +110,13 @@ pub fn extract_bstr<'a>(string: &'a [u8], before: &[u8], after: &[u8]) -> Option
 	
 	let end_index = start_index + twoway::find_bytes(&string[start_index..], after)?;
 	
-	return Some(&string[start_index..end_index]);
+	Some(&string[start_index..end_index])
 }
 
 /// Returns the first element, the last element, and the total number of elements in the given
 /// iterator. In case the iterator is empty or has only one element, None is returned instead of
 /// the first and last element.
+#[allow(clippy::type_complexity)]
 pub fn first_and_last_and_count<I: std::iter::Iterator>(mut iterator: I) -> (Option<(I::Item, I::Item)>, u64) {
 	// exception case handling
 	let first_elem = match iterator.next() {
@@ -137,12 +138,12 @@ pub fn first_and_last_and_count<I: std::iter::Iterator>(mut iterator: I) -> (Opt
 		None => return (None, 1),
 	};
 	
-	return (Some((first_elem, last_elem)), count);
+	(Some((first_elem, last_elem)), count)
 }
 
 /// Does exactly what it says on the box
 pub fn is_sorted<T: Ord>(data: &[T]) -> bool {
-	return data.windows(2).all(|w| w[0] <= w[1]);
+	data.windows(2).all(|w| w[0] <= w[1])
 }
 
 pub fn trim_bstr(bstr: &[u8]) -> &[u8] {
@@ -151,7 +152,7 @@ pub fn trim_bstr(bstr: &[u8]) -> &[u8] {
 		None => return &bstr[..0], // when there's no non-whitespace char, return empty slice
 	};
 	let end_index = bstr.iter().rposition(|&c| !is_ascii_whitespace(c)).unwrap(); // can't panic
-	return &bstr[start_index..=end_index]
+	&bstr[start_index..=end_index]
 }
 
 // I wish I knew how to make this properly generic, over arbitrary number types
@@ -164,15 +165,16 @@ pub fn mean<I: Iterator>(iterator: I) -> f32
 		sum += *value_ref;
 		count += 1;
 	}
-	return sum / count as f32;
+	sum / count as f32
 }
 
 pub fn is_ascii_whitespace(c: u8) -> bool {
-	return c == b' ' || c == b'\t' || c == b'\n' || c == b'\r'
+	c == b' ' || c == b'\t' || c == b'\n' || c == b'\r'
 			|| c == 0x0c // form feed; an ASCII control symbol for a page break
-			|| c == 0x0b; // vertical tab
+			|| c == 0x0b // vertical tab
 }
 
+#[allow(clippy::collapsible_if)]
 pub fn longest_true_sequence<I>(iterator: I) -> u64
 		where I: Iterator<Item=bool> {
 	
@@ -193,7 +195,7 @@ pub fn longest_true_sequence<I>(iterator: I) -> u64
 		longest_so_far = current_run;
 	}
 
-	return longest_so_far;
+	longest_so_far
 }
 
 #[cfg(test)]

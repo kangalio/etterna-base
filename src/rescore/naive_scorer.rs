@@ -53,6 +53,6 @@ impl ScoringSystem for NaiveScorer {
 		wifescore_sum += W::MISS_WEIGHT * num_misses as f32;
 		if DEBUG { println!("wife points sum w/ misses: {}", wifescore_sum * 2.0); }
 
-		return ScoringResult { wifescore_sum, num_judged_notes };
+		ScoringResult { wifescore_sum, num_judged_notes }
 	}
 }
