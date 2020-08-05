@@ -204,6 +204,7 @@ mod tests {
 	
 	// Util function, other tests use this
 	#[macro_export]
+	#[doc(hidden)]
 	macro_rules! assert_float_eq {
 		($left: expr, $right: expr; epsilon = $epsilon: expr) => (
 			// Evaluate expressions

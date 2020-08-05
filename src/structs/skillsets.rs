@@ -160,7 +160,7 @@ impl Skillset8 {
 	/// 
 	/// # Example
 	/// ```rust
-	/// # use etternaonline_api::Skillset8;
+	/// # use etterna_base::Skillset8;
 	/// assert_eq!(Some(Skillset8::Jumpstream), Skillset8::from_user_input("js"));
 	/// assert_eq!(Some(Skillset8::Jackspeed), Skillset8::from_user_input("Jacks"));
 	/// assert_eq!(Some(Skillset8::Jackspeed), Skillset8::from_user_input("JACKSPEED"));

@@ -10,6 +10,12 @@ pub use rescore::*;
 mod rating_calc;
 pub use rating_calc::*;
 
+mod note_subsets;
+pub use note_subsets::*;
+
+mod savegame;
+pub use savegame::*;
+
 mod util;
 
 #[cfg(all(feature = "rayon", not(feature = "parallel")))]
