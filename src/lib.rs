@@ -16,6 +16,9 @@ pub use note_subsets::*;
 mod savegame;
 pub use savegame::*;
 
+mod pattern;
+pub use pattern::*;
+
 mod util;
 
 #[cfg(all(feature = "rayon", not(feature = "parallel")))]
