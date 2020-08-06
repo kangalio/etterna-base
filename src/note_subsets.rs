@@ -1,17 +1,21 @@
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct FastestComboInfo {
-	start_second: f32,
-	end_second: f32,
-	length: u64,
-	speed: f32,
+	pub start_second: f32,
+	pub end_second: f32,
+	pub length: u32,
+	pub speed: f32,
 }
 
-// The caller still has to scale the returned nps by the music rate
-// `seconds` must be sorted
+/// This function finds the fastest note subset (where the number of notes in the subset is in
+/// `min_num_notes..=max_num_notes`). The function operates on a single lane only!
+/// 
+/// The caller still has to scale the returned NPS by the music rate
+/// 
+/// `seconds` must be sorted!
 pub fn find_fastest_note_subset(
 	seconds: &[f32],
-	min_num_notes: u64,
-	max_num_notes: u64, // inclusive
+	min_num_notes: u32,
+	max_num_notes: u32, // inclusive
 ) -> FastestComboInfo {
 	let mut fastest = FastestComboInfo {
 		start_second: 0.0, end_second: 0.0, length: 0, // dummy values
@@ -32,7 +36,7 @@ pub fn find_fastest_note_subset(
 			// a 30 NPS subset is more impressive at window size 110 than at window size 100.
 			if nps >= fastest.speed {
 				fastest = FastestComboInfo {
-					length: n as u64,
+					length: n as u32,
 					start_second: seconds[i],
 					end_second: seconds[end_i],
 					speed: nps,
@@ -44,12 +48,19 @@ pub fn find_fastest_note_subset(
 	fastest
 }
 
-// The caller still has to scale the returned nps by the music rate
-// `seconds` must be sorted, and in the same order as `wife_pts`
+/// This function finds the "best" note subset (where the number of notes in the subset is in
+/// `min_num_notes..=max_num_notes`). The function operates on a single lane only!
+/// 
+/// How is "best" defined? It's NPS multiplied by Wife points. For example, a sequence of 50 notes
+/// in the timespan of 10 seconds, with a wifescore of 80% yields a value of 4.
+/// 
+// The caller still has to scale the returned speed value by the music rate
+// 
+// `seconds` must be sorted, and in the same order as `wife_pts`!
 pub fn find_fastest_note_subset_wife_pts(
 	seconds: &[f32],
-	min_num_notes: u64,
-	max_num_notes: u64, // inclusive
+	min_num_notes: u32,
+	max_num_notes: u32, // inclusive
 	wife_pts: &[f32],
 ) -> FastestComboInfo {
 	assert!(wife_pts.len() == seconds.len());
@@ -81,7 +92,7 @@ pub fn find_fastest_note_subset_wife_pts(
 			
 			if nps >= fastest.speed { // why >=? see other note subset function
 				fastest = FastestComboInfo {
-					length: n as u64,
+					length: n as u32,
 					start_second: seconds[i],
 					end_second: seconds[end_i],
 					speed: nps,
@@ -100,20 +111,22 @@ pub fn find_fastest_note_subset_wife_pts(
 	fastest
 }
 
+/// Find the fastest combo within the score. It searched only for combos whose lengths lie inside
+/// `min_num_notes..=max_num_notes`.
+/// 
+/// The `are_cbs` iterator must yield as many elements as `seconds` and `wife_pts` (if present)
+/// have.
+/// 
+/// If `wife_pts` is provided, the nps will be multiplied by wife pts. the 'nps' is practically
+/// 'wife points per second' then
 pub fn find_fastest_combo_in_score<I, T>(
 	seconds: &[f32],
-	are_cbs: I,
-	min_num_notes: u64,
-	max_num_notes: u64,
-	// if this is provided, the nps will be multiplied by wife pts. the 'nps' is practically
-	// 'wife points per second' then
+	are_cbs: impl IntoIterator<Item=bool>,
+	min_num_notes: u32,
+	max_num_notes: u32,
 	wife_pts: Option<&[f32]>,
 	rate: f32,
-) -> FastestComboInfo
-where
-	I: IntoIterator<Item=T>,
-	T: std::ops::Deref<Target=bool>,
-{
+) -> FastestComboInfo {
 	//~ assert_eq!(seconds.len(), are_cbs.len());
 	if let Some(wife_pts) = wife_pts {
 		assert_eq!(seconds.len(), wife_pts.len());
@@ -133,14 +146,13 @@ where
 			let fastest_note_subset;
 			if let Some(wife_pts) = wife_pts {
 				let wife_pts_slice = &wife_pts[combo_start_i..combo_end_i];
-				fastest_note_subset = find_fastest_note_subset_wife_pts(combo,
-						min_num_notes,
-						max_num_notes,
-						wife_pts_slice);
+				fastest_note_subset = find_fastest_note_subset_wife_pts(
+					combo, min_num_notes, max_num_notes, wife_pts_slice
+				);
 			} else {
-				fastest_note_subset = find_fastest_note_subset(combo,
-						min_num_notes,
-						max_num_notes);
+				fastest_note_subset = find_fastest_note_subset(
+					combo, min_num_notes, max_num_notes
+				);
 			}
 			
 			if fastest_note_subset.speed > fastest_combo.speed {
@@ -151,7 +163,7 @@ where
 	};
 	
 	for (i, is_cb) in are_cbs.into_iter().enumerate() {
-		if *is_cb {
+		if is_cb {
 			trigger_combo_end(i);
 		}
 	}
@@ -173,8 +185,8 @@ mod tests {
 		// case the wife_pts parameter is a dummy vector filled with 1, so that the wife_pts
 		// function should yield identical results to the standard variant). It asserts equality,
 		// and also checks if the result length and speed match the expected result
-		fn test_the_functions(seconds: &[f32], min_num_notes: u64, max_num_notes: u64,
-				expected_length: u64, expected_speed: f32) {
+		fn test_the_functions(seconds: &[f32], min_num_notes: u32, max_num_notes: u32,
+				expected_length: u32, expected_speed: f32) {
 			
 			let fastest_subset = find_fastest_note_subset(&seconds,
 					min_num_notes, max_num_notes);

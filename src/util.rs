@@ -175,21 +175,24 @@ pub fn is_ascii_whitespace(c: u8) -> bool {
 }
 
 #[allow(clippy::collapsible_if)]
-pub fn longest_true_sequence<I>(iterator: I) -> u64
-		where I: Iterator<Item=bool> {
-	
+pub fn longest_true_sequence(iterator: impl IntoIterator<Item = bool>) -> u32 {
 	let mut longest_so_far = 0;
 	let mut current_run = 0;
+	// let mut current_run_start = 0;
+	// for (i, is_true) in iterator.into_iter().enumerate() {
 	for is_true in iterator {
 		if is_true {
 			current_run += 1;
 		} else {
 			if current_run > longest_so_far {
+				// println!("New best run from {} to {} - {} items!", current_run_start, i, current_run);
 				longest_so_far = current_run;
-				current_run = 0;
 			}
+			// current_run_start = i;
+			current_run = 0;
 		}
 	}
+	// println!();
 
 	if current_run > longest_so_far {
 		longest_so_far = current_run;

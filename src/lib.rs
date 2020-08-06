@@ -84,11 +84,11 @@ where
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct SkillGraph<T> {
+pub struct SkillTimeline<T> {
 	pub changes: Vec<(T, UserSkillsets)>,
 }
 
-pub fn skill_graph<'a, I, T, S>(iterator: I, pre_070: bool) -> SkillGraph<T>
+pub fn skill_timeline<'a, I, T, S>(iterator: I, pre_070: bool) -> SkillTimeline<T>
 where
 	I: IntoIterator<Item = (T, S)>,
 	T: 'a + PartialEq + Copy + Send,
@@ -134,5 +134,5 @@ where
 		}))
 		.collect();
 
-	SkillGraph { changes }
+	SkillTimeline { changes }
 }

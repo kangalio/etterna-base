@@ -124,6 +124,16 @@ impl Rate {
 	pub fn from_x20(x20: u32) -> Self {
 		Self { x20 }
 	}
+
+	/// Returns an f32 representation of this rate.
+	/// 
+	/// ```rust
+	/// # use etterna_base::structs::Rate;
+	/// assert_eq!(Rate::from_string("1.40").unwrap().as_f32(), 1.4);
+	/// ```
+	pub fn as_f32(self) -> f32 {
+		self.x20 as f32 / 20.0
+	}
 }
 
 impl std::fmt::Display for Rate {

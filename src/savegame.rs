@@ -1,9 +1,15 @@
+/// Contents of an Etterna ReplayV2 replay file. See [`parse_replay`] for more
 pub struct ReplayFileData {
-	pub ticks: Vec<u32>,
-	pub deviations: Vec<f32>,
-	pub columns: Vec<u8>,
+	pub notes: Vec<ReplayFileNote>,
 	pub num_mine_hits: u32,
 	pub num_hold_drops: u32,
+}
+
+/// Represents a single note in a [`ReplayFileData`]
+pub struct ReplayFileNote {
+	pub tick: u32,
+	pub deviation: f32,
+	pub column: u8,
 }
 
 fn parse_sm_float(string: &[u8]) -> Option<f32> {
@@ -42,9 +48,7 @@ fn parse_sm_float(string: &[u8]) -> Option<f32> {
 pub fn parse_replay(bytes: &[u8]) -> ReplayFileData {
 	let approx_max_num_lines = bytes.len() / 16; // 16 is a pretty good approximation	
 	
-	let mut ticks = Vec::with_capacity(approx_max_num_lines);
-	let mut deviations = Vec::with_capacity(approx_max_num_lines);
-	let mut columns = Vec::with_capacity(approx_max_num_lines);
+	let mut notes = Vec::with_capacity(approx_max_num_lines);
 	let mut num_mine_hits = 0;
 	let mut num_hold_drops = 0;
 	for line in crate::util::split_newlines(&bytes, 5) {
@@ -71,9 +75,7 @@ pub fn parse_replay(bytes: &[u8]) -> ReplayFileData {
 		// We only want tap notes and hold heads
 		match note_type {
 			1 | 2 => { // taps and hold heads
-				ticks.push(tick);
-				deviations.push(deviation);
-				columns.push(column);
+				notes.push(ReplayFileNote { tick, deviation, column });
 			},
 			4 => num_mine_hits += 1, // mines only appear in replay file if they were hit
 			5 | 7 => {}, // lifts and fakes
@@ -81,7 +83,7 @@ pub fn parse_replay(bytes: &[u8]) -> ReplayFileData {
 		}
 	}
 	
-	ReplayFileData { ticks, deviations, columns, num_mine_hits, num_hold_drops }
+	ReplayFileData { notes, num_mine_hits, num_hold_drops }
 }
 
 #[cfg(test)]
