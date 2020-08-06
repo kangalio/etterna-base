@@ -31,39 +31,38 @@ use rayon::iter::ParallelIterator;
 #[doc(hidden)]
 #[macro_export]
 macro_rules! impl_get8 {
-	($struct_type:ty, $return_type:ty, $self_:ident, $overall_getter:expr) => {
-		impl $struct_type {
-			pub fn get(&self, skillset: impl Into<Skillset8>) -> $return_type {
-				let $self_ = self;
-				match skillset.into() {
-					Skillset8::Overall => $overall_getter,
-					Skillset8::Stream => self.stream,
-					Skillset8::Jumpstream => self.jumpstream,
-					Skillset8::Handstream => self.handstream,
-					Skillset8::Stamina => self.stamina,
-					Skillset8::Jackspeed => self.jackspeed,
-					Skillset8::Chordjack => self.chordjack,
-					Skillset8::Technical => self.technical,
-				}
+	($return_type:ty, $self_:ident, $overall_getter:expr) => {
+		/// Get a specific skillset value
+		pub fn get(&self, skillset: impl Into<Skillset8>) -> $return_type {
+			let $self_ = self;
+			match skillset.into() {
+				Skillset8::Overall => $overall_getter,
+				Skillset8::Stream => self.stream,
+				Skillset8::Jumpstream => self.jumpstream,
+				Skillset8::Handstream => self.handstream,
+				Skillset8::Stamina => self.stamina,
+				Skillset8::Jackspeed => self.jackspeed,
+				Skillset8::Chordjack => self.chordjack,
+				Skillset8::Technical => self.technical,
 			}
 		}
 	};
-	($struct_type:ty, $return_type:ty, $self_:ident, $overall_getter:expr, $overall_getter_pre_070:expr) => {
-		crate::impl_get8!($struct_type, $return_type, $self_, $overall_getter);
+	($return_type:ty, $self_:ident, $overall_getter:expr, $overall_getter_pre_070:expr) => {
+		crate::impl_get8!($return_type, $self_, $overall_getter);
 
-		impl $struct_type {
-			pub fn get_pre_070(&self, skillset: impl Into<Skillset8>) -> $return_type {
-				let $self_ = self;
-				match skillset.into() {
-					Skillset8::Overall => $overall_getter_pre_070,
-					Skillset8::Stream => self.stream,
-					Skillset8::Jumpstream => self.jumpstream,
-					Skillset8::Handstream => self.handstream,
-					Skillset8::Stamina => self.stamina,
-					Skillset8::Jackspeed => self.jackspeed,
-					Skillset8::Chordjack => self.chordjack,
-					Skillset8::Technical => self.technical,
-				}
+		/// Get a specific skillset value. If Overall was requested, use the pre-0.70 algorithm
+		/// for calculation.
+		pub fn get_pre_070(&self, skillset: impl Into<Skillset8>) -> $return_type {
+			let $self_ = self;
+			match skillset.into() {
+				Skillset8::Overall => $overall_getter_pre_070,
+				Skillset8::Stream => self.stream,
+				Skillset8::Jumpstream => self.jumpstream,
+				Skillset8::Handstream => self.handstream,
+				Skillset8::Stamina => self.stamina,
+				Skillset8::Jackspeed => self.jackspeed,
+				Skillset8::Chordjack => self.chordjack,
+				Skillset8::Technical => self.technical,
 			}
 		}
 	}
@@ -86,11 +85,37 @@ where
 	collection.into_iter()
 }
 
+/// Representation of a player's ratings over time. See [`skill_timeline`]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct SkillTimeline<T> {
 	pub changes: Vec<(T, UserSkillsets)>,
 }
 
+/// Generate a timeline of player ratings over time. The input is given in form of an iterator
+/// over tuples of each score's day identifier and the score's skillsets.
+/// 
+/// "What's a day identifier" you might ask. Well, this function doesn't re-calculate the player's
+/// rating for each and every score. That would be wasteful. Instead, scores are grouped, usually
+/// by day, and the rating is re-calculated for each day.
+/// 
+/// You can use almost any type you want as a day identifier as long as it can be compared (has a
+/// PartialEq impl).
+/// 
+/// You can either use the current, 0.70+ algorithm, or the old algorithm from older game versions.
+/// For that, use the `pre_070` parameter.
+/// 
+/// ```rust,ignore
+/// scores = &[
+/// 	("2020-08-05", ChartSkillsets { ... }),
+/// 	("2020-08-05", ChartSkillsets { ... }),
+/// 	("2020-08-05", ChartSkillsets { ... }),
+/// 	("2020-08-06", ChartSkillsets { ... }),
+/// 	("2020-08-06", ChartSkillsets { ... }),
+/// ];
+/// 
+/// let timeline = skill_timeline(scores, false);
+/// assert_eq!(timeline.changes.len(), 2);
+/// ```
 pub fn skill_timeline<'a, I, T, S>(iterator: I, pre_070: bool) -> SkillTimeline<T>
 where
 	I: IntoIterator<Item = (T, S)>,

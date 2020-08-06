@@ -39,6 +39,8 @@ fn char_to_lane(c: u8) -> CharToLane {
 	}
 }
 
+/// Represents a simple note pattern without any holds or mines or snap changes.
+#[derive(Debug, Default)]
 pub struct Pattern {
 	/// Each row is a vector of lane numbers. For example a plain jumptrill would be
 	/// `vec![vec![0, 1], vec![2, 3], vec![0, 1], vec![2, 3]...]`
@@ -51,16 +53,16 @@ impl Pattern {
 	/// 
 	/// Returns None if the pattern is empty.
 	///
-	/// Note that this function returns only a _guess_. Nobody knows if [12][34] was intended as a
-	/// 4k pattern, or a 5k, 6k, 7k...
+	/// Note that this function returns only a _guess_. Nobody knows if \[12\]\[34\] was intended as
+	/// a 4k pattern, or a 5k, 6k, 7k...
 	/// 
 	/// ```rust
 	/// # use etterna_base::Pattern;
 	/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-	/// assert_eq!(Pattern::parse_taps("1234")?.keymode(), Some(4));
-	/// assert_eq!(Pattern::parse_taps("123")?.keymode(), Some(4));
-	/// assert_eq!(Pattern::parse_taps("9")?.keymode(), Some(9));
-	/// assert_eq!(Pattern::parse_taps("")?.keymode(), None);
+	/// assert_eq!(Pattern::parse_taps("1234").keymode(), Some(4));
+	/// assert_eq!(Pattern::parse_taps("123").keymode(), Some(4));
+	/// assert_eq!(Pattern::parse_taps("9").keymode(), Some(9));
+	/// assert_eq!(Pattern::parse_taps("").keymode(), None);
 	/// # Ok(()) }
 	/// ```
 	pub fn keymode(&self) -> Option<u32> {
@@ -127,6 +129,18 @@ impl Pattern {
 	}
 }
 
+impl PartialEq for Pattern {
+    fn eq(&self, other: &Self) -> bool {
+		if self.rows.len() != other.rows.len() { return false; }
+		
+		self.rows.iter()
+			.zip(other.rows.iter())
+			.all(|(row_a, row_b)| crate::util::is_equal_no_order_no_duplicates(row_a, row_b))
+    }
+}
+
+impl Eq for Pattern {}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -155,5 +169,21 @@ mod tests {
 	#[should_panic]
 	fn test_first_char_width_panic() {
 		first_char_width("");
+	}
+
+	#[test]
+	fn test_pattern_equality() {
+		assert_eq!(
+			Pattern { rows: vec![vec![0, 1, 2]] },
+			Pattern { rows: vec![vec![2, 1, 0]] },
+		);
+		assert_eq!(
+			Pattern { rows: vec![vec![0, 1, 2, 2]] },
+			Pattern { rows: vec![vec![2, 1, 0]] },
+		);
+		assert_ne!(
+			Pattern { rows: vec![vec![0, 1, 2, 3]] },
+			Pattern { rows: vec![vec![0, 1, 2, 2]] },
+		);
 	}
 }

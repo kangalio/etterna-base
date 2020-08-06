@@ -1,3 +1,5 @@
+//! A collection of common Etterna structs and related functions
+
 mod skillsets;
 pub use skillsets::*;
 
@@ -11,8 +13,9 @@ pub enum Difficulty {
 }
 
 impl Difficulty {
-	/// Parses a short difficulty string as found on the Etterna evaluation screen: BG, IN... The
-	/// string must be given in uppercase letters
+	/// Parses a short difficulty string as found on the Etterna evaluation screen: BG, IN...
+	///
+	/// The string must be given in uppercase letters
 	pub fn from_short_string(string: &str) -> Option<Self> {
 		match string {
 			"BG" => Some(Self::Beginner),
@@ -21,6 +24,22 @@ impl Difficulty {
 			"HD" => Some(Self::Hard),
 			"IN" => Some(Self::Challenge),
 			"ED" => Some(Self::Edit),
+			_ => None,
+		}
+	}
+
+	/// Parse a long difficulty string. Some difficulties has multiple spellings; for example
+	/// "Challenge", "Expert" and "Insane".
+	/// 
+	/// Strings must be given with first letter uppercase and the rest lowercase
+	pub fn from_long_string(string: &str) -> Option<Self> {
+		match string {
+			"Beginner" | "Novice" => Some(Self::Beginner),
+			"Easy" => Some(Self::Easy),
+			"Medium" | "Normal" => Some(Self::Medium),
+			"Hard" => Some(Self::Hard),
+			"Challenge" | "Expert" | "Insane" => Some(Self::Challenge),
+			"Edit" => Some(Self::Edit),
 			_ => None,
 		}
 	}
@@ -36,20 +55,9 @@ impl Difficulty {
 			Self::Edit => "ED",
 		}
 	}
-
-	pub fn from_long_string(string: &str) -> Option<Self> {
-		match string {
-			"Beginner" | "Novice" => Some(Self::Beginner),
-			"Easy" => Some(Self::Easy),
-			"Medium" | "Normal" => Some(Self::Medium),
-			"Hard" => Some(Self::Hard),
-			"Challenge" | "Expert" | "Insane" => Some(Self::Challenge),
-			"Edit" => Some(Self::Edit),
-			_ => None,
-		}
-	}
 }
 
+/// Judgement data, including mines and holds
 #[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FullJudgements {
@@ -65,6 +73,7 @@ pub struct FullJudgements {
 	pub missed_holds: u32,
 }
 
+/// Judgement data, only the basic tap judgements
 #[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TapJudgements {
@@ -89,6 +98,13 @@ pub enum NoteType {
 	Fake,
 }
 
+/// Represents an Etterna chart rate (music speed).
+/// 
+/// As in Etterna, this value can only be a multiple of 0.05. The value can't be negative, nor NaN
+/// or infinity.
+/// 
+/// When printed, a [`Rate`] is formatted as usual in Etterna; two floating point digits and an `x`
+/// at the end: `0.85x, 1.00x, 2.40x`
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rate {
@@ -203,18 +219,27 @@ impl Ord for Wifescore {
     }
 }
 
+// This can't be a derive for whatever reason /shrug
 impl Eq for Wifescore {}
+
+// we need this wrapper because REDACTED
+macro_rules! doc_comment {
+	($comment:expr, $($stuff:tt)*) => { #[doc = $comment] $($stuff)* };
+}
 
 // Implementation for both chartkey and scorekey (and potentially even songkey in the future? maybe
 // once I figure out what the hell songkey even is)
 macro_rules! etterna_data_key {
-	($name:ident, $initial_letter:expr) => (
+	($name:ident, $name_lowercase:ident, $initial_letter:expr) => (
 		// TODO: maybe it's a good idea to represent this as [u8; 20] instead? not sure
-		#[derive(Debug, Clone, Eq, PartialEq, Hash, /* NOT Default, it would produce an invalid state! */)]
-		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-		pub struct $name(String);
+		doc_comment! { concat!("Represents an Etterna ", stringify!($name_lowercase)),
+			#[derive(Debug, Clone, Eq, PartialEq, Hash, /* NOT Default, it would produce an invalid state! */)]
+			#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+			pub struct $name(String);
+		}
 
 		impl $name {
+			/// Check if the given string represents a valid key
 			pub fn is_valid(key: &str) -> bool {
 				let initial_letter: char = $initial_letter;
 
@@ -223,6 +248,7 @@ macro_rules! etterna_data_key {
 					&& !key[1..].contains(|c| (c < '0' || c > '9') && (c < 'a' || c > 'f'))
 			}
 
+			/// Create a new key from the given string, or None if the string is invalid.
 			pub fn new(key: String) -> Option<Self> {
 				if Self::is_valid(&key) {
 					Some(Self(key))
@@ -231,10 +257,12 @@ macro_rules! etterna_data_key {
 				}
 			}
 
+			/// Get a reference to the underlying string
 			pub fn as_str(&self) -> &str {
 				&self.0
 			}
 
+			/// Convert this key into a `String`
 			pub fn into_string(self) -> String {
 				self.0
 			}
@@ -261,9 +289,10 @@ macro_rules! etterna_data_key {
 	)
 }
 
-etterna_data_key!(Scorekey, 'S');
-etterna_data_key!(Chartkey, 'X');
+etterna_data_key!(Scorekey, scorekey, 'S');
+etterna_data_key!(Chartkey, chartkey, 'X');
 
+/// Represents a file size
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FileSize {
@@ -271,13 +300,28 @@ pub struct FileSize {
 }
 
 impl FileSize {
+	/// Create a new file size from the given number of bytes
+	pub fn from_bytes(bytes: u64) -> Self {
+		Self { bytes }
+	}
+
+	/// Get the number of bytes
 	pub fn bytes(self) -> u64 { self.bytes }
+
+	/// Get the number of kilobytes, rounded down
 	pub fn kb(self) -> u64 { self.bytes / 1_000 }
+
+	/// Get the number of megabytes, rounded down
 	pub fn mb(self) -> u64 { self.bytes / 1_000_000 }
+
+	/// Get the number of gigabytes, rounded down
 	pub fn gb(self) -> u64 { self.bytes / 1_000_000_000 }
+
+	/// Get the number of terabytes, rounded down
 	pub fn tb(self) -> u64 { self.bytes / 1_000_000_000_000 }
 }
 
+/// Error returned from `FileSize::from_str`
 #[derive(Debug, Error)]
 pub enum FileSizeParseError {
 	#[error("Given string was empty")]
@@ -286,14 +330,8 @@ pub enum FileSizeParseError {
 	InvalidNumber(#[source] std::num::ParseFloatError),
 	#[error("No KB/MB/... ending")]
 	NoEnding,
-	#[error("Unknown ending (i.e. the KB/MB/... thingy)")]
+	#[error("Unknown ending (the KB/MB/... thingy)")]
 	UnexpectedEnding(String),
-}
-
-impl FileSize {
-	pub fn from_bytes(bytes: u64) -> Self {
-		Self { bytes }
-	}
 }
 
 impl std::str::FromStr for FileSize {
@@ -336,4 +374,7 @@ pub struct UserRank {
 	pub chordjack: u32,
 	pub technical: u32,
 }
-crate::impl_get8!(UserRank, u32, a, a.overall);
+
+impl UserRank {
+	crate::impl_get8!(u32, a, a.overall);
+}

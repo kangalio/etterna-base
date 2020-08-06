@@ -1,3 +1,4 @@
+/// Information about a combo found by [`find_fastest_note_subset`]
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct FastestComboInfo {
 	pub start_second: f32,
@@ -9,7 +10,8 @@ pub struct FastestComboInfo {
 /// This function finds the fastest note subset (where the number of notes in the subset is in
 /// `min_num_notes..=max_num_notes`). The function operates on a single lane only!
 /// 
-/// The caller still has to scale the returned NPS by the music rate
+/// ~~The caller still has to scale the returned NPS by the music rate~~ (only applies to
+/// etterna-graph, where the note seconds are always in 1.00x)
 /// 
 /// `seconds` must be sorted!
 pub fn find_fastest_note_subset(
@@ -54,9 +56,10 @@ pub fn find_fastest_note_subset(
 /// How is "best" defined? It's NPS multiplied by Wife points. For example, a sequence of 50 notes
 /// in the timespan of 10 seconds, with a wifescore of 80% yields a value of 4.
 /// 
-// The caller still has to scale the returned speed value by the music rate
-// 
-// `seconds` must be sorted, and in the same order as `wife_pts`!
+/// ~~The caller still has to scale the returned speed value by the music rate~~ (only applies to
+/// etterna-graph, where the note seconds are always in 1.00x)
+/// 
+/// `seconds` must be sorted, and in the same order as `wife_pts`!
 pub fn find_fastest_note_subset_wife_pts(
 	seconds: &[f32],
 	min_num_notes: u32,

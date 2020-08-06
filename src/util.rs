@@ -201,6 +201,12 @@ pub fn longest_true_sequence(iterator: impl IntoIterator<Item = bool>) -> u32 {
 	longest_so_far
 }
 
+/// Checks whether two slices are equal to one another, disregarding order and duplicates
+pub fn is_equal_no_order_no_duplicates<T: PartialEq>(a: &[T], b: &[T]) -> bool {
+	a.iter().all(|a_elem| b.contains(a_elem))
+	&& b.iter().all(|b_elem| a.contains(b_elem))
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*; // Use all functions above
@@ -291,5 +297,16 @@ mod tests {
 		for char_code in 0..=255u8 {
 			assert_eq!(is_ascii_whitespace(char_code), whitespace_chars.contains(&char_code));
 		}
+	}
+
+	#[test]
+	fn test_is_equal_no_order_no_duplicates() {
+		assert!(is_equal_no_order_no_duplicates(b"hello", b"helo"));
+		assert!(is_equal_no_order_no_duplicates(b"hello", b"olleh"));
+		assert!(is_equal_no_order_no_duplicates(
+			b"llllllllllllllllllllllllllllhoehoehoehoe",
+			b"lheooleohohoholehloeloeoeloelohelohelehlehloeoleol"
+		));
+		assert!(!is_equal_no_order_no_duplicates(b"", b"hi"));
 	}
 }

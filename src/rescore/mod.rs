@@ -6,7 +6,8 @@ pub use matching_scorer::MatchingScorer;
 mod naive_scorer;
 pub use naive_scorer::NaiveScorer;
 
-
+/// Result of evaluating a [`ScoringSystem`] on a list of notes and hits
+/// ([`ScoringSystem::evaluate`])
 pub struct ScoringResult {
 	wifescore_sum: f32,
 	num_judged_notes: u64,
@@ -32,7 +33,7 @@ pub trait SimpleReplay {
 	/// 
 	/// # Example
 	/// Find the longest marvelous combo:
-	/// ```rust
+	/// ```rust,ignore
 	/// let longest_marvelous_combo = replay.longest_combo(|d| d < 0.0225);
 	/// ```
 	fn longest_combo(&self, mut note_filter: impl FnMut(f32) -> bool) -> u32 {

@@ -1,6 +1,5 @@
 use super::Wife;
 
-
 const INNER_MISS_WEIGHT: f32 = -8.0;
 const INNER_HOLD_DROP_WEIGHT: f32 = -6.0;
 const INNER_MINE_HIT_WEIGHT: f32 = -8.0;

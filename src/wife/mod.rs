@@ -3,7 +3,6 @@ pub use wife2::*;
 mod wife3;
 pub use wife3::*;
 
-
 /// Trait that abstracts over wifescore algorithm - the algorithm that turns a hit deviation into a
 /// score percent
 pub trait Wife {
