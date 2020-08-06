@@ -4,6 +4,7 @@ mod skillsets;
 pub use skillsets::*;
 
 use thiserror::Error;
+use std::{str::FromStr, convert::TryFrom};
 
 /// Chart difficulty enum
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -128,6 +129,7 @@ impl Rate {
 	/// Parses a string into a rate. The string needs to be in the format `\d+\.\d+[05]?`
 	/// 
 	/// Returns None if parsing failed
+	// TODO: Rework this to not rely on float parsing but parse the digits directly
 	pub fn from_string(string: &str) -> Option<Self> {
 		// not the most efficient but /shrug
 		Self::from_f32(string.parse().ok()?)
@@ -167,6 +169,48 @@ impl std::fmt::Debug for Rate {
 impl Default for Rate {
     fn default() -> Self {
         Self::from_x20(20)
+    }
+}
+
+impl From<f32> for Rate {
+    fn from(value: f32) -> Self {
+		Self::try_from(value).expect("Invalid rate string")
+    }
+}
+
+impl FromStr for Rate {
+	type Err = ();
+	
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_string(s).ok_or(())
+    }
+}
+
+impl std::ops::Add for Rate {
+	type Output = Self;
+	
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::from_x20(self.x20 + rhs.x20)
+    }
+}
+
+impl std::ops::Sub for Rate {
+	type Output = Self;
+	
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::from_x20(self.x20 - rhs.x20)
+    }
+}
+
+impl std::ops::AddAssign for Rate {
+    fn add_assign(&mut self, other: Self) {
+        self.x20 += other.x20;
+    }
+}
+
+impl std::ops::SubAssign for Rate {
+    fn sub_assign(&mut self, other: Self) {
+        self.x20 -= other.x20;
     }
 }
 
