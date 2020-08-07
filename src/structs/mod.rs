@@ -285,18 +285,22 @@ pub trait SimpleReplay {
 	/// Finds the longest combo of notes evaluating to true in the given closure
 	/// 
 	/// The note deviations passed into the closure can be negative or positive, depending on
-	/// whether it was an early or a late hit. In case of a miss, the deviation is None.
+	/// whether it was an early or a late hit. In case of a miss, the closure call is skipped
+	/// entirely and `false` is inserted.
 	/// 
 	/// # Example
 	/// Find the longest marvelous combo:
 	/// ```rust,ignore
 	/// let longest_marvelous_combo = replay.longest_combo(|d| d < 0.0225);
 	/// ```
-	fn longest_combo(&self, mut note_filter: impl FnMut(Option<f32>) -> bool) -> u32 {
+	fn longest_combo(&self, mut note_filter: impl FnMut(f32) -> bool) -> u32 {
 		crate::util::longest_true_sequence(
 			self
 				.iter_deviations()
-				.map(|d| note_filter(d))
+				.map(|d| match d {
+					Some(deviation) => note_filter(deviation),
+					None => false, // if it was a miss, the combo will by definition break
+				})
 		)
 	}
 
