@@ -1,8 +1,6 @@
 //! https://discord.com/channels/339597420239519755/389194939881488385/735175202006237344
 //! The following implementations are bit-accurate to the Etterna game code as of 2020-07-21
 
-fn erfc(x: f32) -> f32 { libm::erfc(x as f64) as f32 }
-
 fn is_rating_okay(rating: f32, ssrs: &[f32], delta_multiplier: f32) -> bool {
 	// Notice the somewhat peculiar usage of f32 and f64 in here. That's to mirror the C++
 	// implementation as closely as possible - we thrive for bit-accuracy after all
@@ -10,7 +8,7 @@ fn is_rating_okay(rating: f32, ssrs: &[f32], delta_multiplier: f32) -> bool {
 	let max_power_sum: f64 = 2f64.powf(rating as f64 * 0.1);
 	
 	let power_sum: f64 = ssrs.iter()
-		.map(|&ssr| (2.0 / erfc(delta_multiplier * (ssr - rating)) - 2.0) as f64)
+		.map(|&ssr| (2.0 / libm::erfcf(delta_multiplier * (ssr - rating)) - 2.0) as f64)
 		.filter(|&x| x > 0.0)
 		.sum();
 	

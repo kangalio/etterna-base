@@ -14,20 +14,19 @@ pub trait Wife {
 	const MISS_WEIGHT: f32;
 
 	/// Calculate a wifescore by the note deviation, which can be positive or negative
-	fn calc(deviation: f32) -> f32;
+	fn calc(deviation: f32, judge: &crate::Judge) -> f32;
 
 	/// Shorthand function to apply this wifescore algorithm to a list of deviations, mine hits and
 	/// hold drops.
 	/// 
 	/// Misses must be present in the `deviations` slice in form of a `1.000000` value
-	fn apply(deviations: &[f32], num_mine_hits: u64, num_hold_drops: u64) -> f32 {
+	fn apply(deviations: &[f32], num_mine_hits: u64, num_hold_drops: u64, judge: &crate::Judge) -> f32 {
 		let mut wifescore_sum = 0.0;
 		for &deviation in deviations {
-			// if (deviation - 1.0).abs() < 0.0001 { // it's a miss
-			if deviation.abs() >= 0.18 - f32::EPSILON { // EO's replay format is not compatible with above
+			if judge.is_miss(deviation) {
 				wifescore_sum += Self::MISS_WEIGHT;
 			} else {
-				wifescore_sum += Self::calc(deviation);
+				wifescore_sum += Self::calc(deviation, judge);
 			}
 		}
 
@@ -38,8 +37,8 @@ pub trait Wife {
 	}
 }
 
-/// Calculate a score from a hit deviation based on Etterna's Wife2 scoring system
-pub fn wife2(deviation: f32) -> f32 { Wife2::calc(deviation) }
+/// Utility function to calculate a Wife2 score for a single hit deviation
+pub fn wife2(deviation: f32, judge: &crate::Judge) -> f32 { Wife2::calc(deviation, judge) }
 
-/// Calculate a score from a hit deviation based on Etterna's Wife3 scoring system
-pub fn wife3(deviation: f32) -> f32 { Wife3::calc(deviation) }
+/// Utility function to calculate a Wife3 score for a single hit deviation
+pub fn wife3(deviation: f32, judge: &crate::Judge) -> f32 { Wife3::calc(deviation, judge) }

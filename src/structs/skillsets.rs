@@ -14,7 +14,7 @@ pub struct ChartSkillsets {
 }
 
 impl ChartSkillsets {
-	crate::impl_get8!(f32, a, a.overall(), a.overall_pre_070());
+	crate::impl_get_skillset!(f32, a, a.overall(), a.overall_pre_070());
 
 	/// Return the overall skillset, as derived from the 7 individual skillsets
 	/// 
@@ -99,7 +99,7 @@ pub struct UserSkillsets {
 }
 
 impl UserSkillsets {
-	crate::impl_get8!(f32, a, a.overall(), a.overall_pre_070());
+	crate::impl_get_skillset!(f32, a, a.overall(), a.overall_pre_070());
 
 	/// Return the overall skillset, as derived from the 7 individual skillsets
 	/// 

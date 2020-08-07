@@ -3,8 +3,17 @@
 mod skillsets;
 pub use skillsets::*;
 
-use thiserror::Error;
-use std::{str::FromStr, convert::TryFrom};
+mod file_size;
+pub use file_size::*;
+
+mod rate;
+pub use rate::*;
+
+mod timing_info;
+pub use timing_info::*;
+
+mod judge;
+pub use judge::*;
 
 /// Chart difficulty enum
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -86,6 +95,34 @@ pub struct TapJudgements {
 	pub misses: u32,
 }
 
+impl std::ops::Index<crate::TapJudgement> for TapJudgements {
+	type Output = u32;
+	
+    fn index(&self, index: crate::TapJudgement) -> &Self::Output {
+        match index {
+			crate::TapJudgement::Marvelous => &self.marvelouses,
+			crate::TapJudgement::Perfect => &self.perfects,
+			crate::TapJudgement::Great => &self.greats,
+			crate::TapJudgement::Good => &self.goods,
+			crate::TapJudgement::Bad => &self.bads,
+			crate::TapJudgement::Miss => &self.misses,
+		}
+    }
+}
+
+impl std::ops::IndexMut<crate::TapJudgement> for TapJudgements {
+    fn index_mut(&mut self, index: crate::TapJudgement) -> &mut Self::Output {
+        match index {
+			crate::TapJudgement::Marvelous => &mut self.marvelouses,
+			crate::TapJudgement::Perfect => &mut self.perfects,
+			crate::TapJudgement::Great => &mut self.greats,
+			crate::TapJudgement::Good => &mut self.goods,
+			crate::TapJudgement::Bad => &mut self.bads,
+			crate::TapJudgement::Miss => &mut self.misses,
+		}
+    }
+}
+
 /// Type of a note
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -97,121 +134,6 @@ pub enum NoteType {
 	Lift,
 	Keysound,
 	Fake,
-}
-
-/// Represents an Etterna chart rate (music speed).
-/// 
-/// As in Etterna, this value can only be a multiple of 0.05. The value can't be negative, nor NaN
-/// or infinity.
-/// 
-/// When printed, a [`Rate`] is formatted as usual in Etterna; two floating point digits and an `x`
-/// at the end: `0.85x, 1.00x, 2.40x`
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Rate {
-	// this value is 20x the real rate, e.g. `1.15x` would be 23
-	x20: u32,
-}
-
-impl Rate {
-	/// Rounds to the nearest valid rate.
-	/// 
-	/// Returns None if the given value is negative or too large
-	pub fn from_f32(r: f32) -> Option<Self> {
-		// Some(Self { x20: (r * 20.0).round().try_into().ok()? })
-		if r < 0.0 || r > u32::MAX as f32 {
-			None
-		} else {
-			Some(Self { x20: (r * 20.0).round() as u32 })
-		}
-	}
-
-	/// Parses a string into a rate. The string needs to be in the format `\d+\.\d+[05]?`
-	/// 
-	/// Returns None if parsing failed
-	// TODO: Rework this to not rely on float parsing but parse the digits directly
-	pub fn from_string(string: &str) -> Option<Self> {
-		// not the most efficient but /shrug
-		Self::from_f32(string.parse().ok()?)
-	}
-
-	/// Create a new rate from a value that is equal to the real rate multiplied by 20.
-	/// 
-	/// Due to the fact that Etterna ratings are always multiples of 0.05, every rate can be
-	/// precicely represented precisely with a whole number when multiplied by 20.
-	pub fn from_x20(x20: u32) -> Self {
-		Self { x20 }
-	}
-
-	/// Returns an f32 representation of this rate.
-	/// 
-	/// ```rust
-	/// # use etterna_base::structs::Rate;
-	/// assert_eq!(Rate::from_string("1.40").unwrap().as_f32(), 1.4);
-	/// ```
-	pub fn as_f32(self) -> f32 {
-		self.x20 as f32 / 20.0
-	}
-}
-
-impl std::fmt::Display for Rate {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.2}x", self.x20 as f32 / 20.0)
-    }
-}
-
-impl std::fmt::Debug for Rate {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({} / 20.0)x", self.x20)
-    }
-}
-
-impl Default for Rate {
-    fn default() -> Self {
-        Self::from_x20(20)
-    }
-}
-
-impl From<f32> for Rate {
-    fn from(value: f32) -> Self {
-		Self::try_from(value).expect("Invalid rate string")
-    }
-}
-
-impl FromStr for Rate {
-	type Err = ();
-	
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_string(s).ok_or(())
-    }
-}
-
-impl std::ops::Add for Rate {
-	type Output = Self;
-	
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::from_x20(self.x20 + rhs.x20)
-    }
-}
-
-impl std::ops::Sub for Rate {
-	type Output = Self;
-	
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::from_x20(self.x20 - rhs.x20)
-    }
-}
-
-impl std::ops::AddAssign for Rate {
-    fn add_assign(&mut self, other: Self) {
-        self.x20 += other.x20;
-    }
-}
-
-impl std::ops::SubAssign for Rate {
-    fn sub_assign(&mut self, other: Self) {
-        self.x20 -= other.x20;
-    }
 }
 
 /// Wifescore struct. Guaranteed to be a valid value, i.e. not infinity and not NaN
@@ -336,75 +258,6 @@ macro_rules! etterna_data_key {
 etterna_data_key!(Scorekey, scorekey, 'S');
 etterna_data_key!(Chartkey, chartkey, 'X');
 
-/// Represents a file size
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct FileSize {
-	bytes: u64,
-}
-
-impl FileSize {
-	/// Create a new file size from the given number of bytes
-	pub fn from_bytes(bytes: u64) -> Self {
-		Self { bytes }
-	}
-
-	/// Get the number of bytes
-	pub fn bytes(self) -> u64 { self.bytes }
-
-	/// Get the number of kilobytes, rounded down
-	pub fn kb(self) -> u64 { self.bytes / 1_000 }
-
-	/// Get the number of megabytes, rounded down
-	pub fn mb(self) -> u64 { self.bytes / 1_000_000 }
-
-	/// Get the number of gigabytes, rounded down
-	pub fn gb(self) -> u64 { self.bytes / 1_000_000_000 }
-
-	/// Get the number of terabytes, rounded down
-	pub fn tb(self) -> u64 { self.bytes / 1_000_000_000_000 }
-}
-
-/// Error returned from `FileSize::from_str`
-#[derive(Debug, Error)]
-pub enum FileSizeParseError {
-	#[error("Given string was empty")]
-	EmptyString,
-	#[error("Error while parsing the filesize number")]
-	InvalidNumber(#[source] std::num::ParseFloatError),
-	#[error("No KB/MB/... ending")]
-	NoEnding,
-	#[error("Unknown ending (the KB/MB/... thingy)")]
-	UnexpectedEnding(String),
-}
-
-impl std::str::FromStr for FileSize {
-	type Err = FileSizeParseError;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut token_iter = s.split_whitespace();
-		let number: f64 = token_iter.next().ok_or(FileSizeParseError::EmptyString)?
-			.parse().map_err(FileSizeParseError::InvalidNumber)?;
-		let ending = token_iter.next().ok_or(FileSizeParseError::NoEnding)?;
-
-		let ending = ending.to_lowercase();
-		let multiplier: u64 = match &ending as &str {
-			"b"	  => 1,
-			"kb"  => 1000,
-			"kib" => 1024,
-			"mb"  => 1000 * 1000,
-			"mib" => 1024 * 1024,
-			"gb"  => 1000 * 1000 * 1000,
-			"gib" => 1024 * 1024 * 1024,
-			"tb"  => 1000 * 1000 * 1000 * 1000,
-			"tib" => 1024 * 1024 * 1024 * 1024,
-			_ => return Err(FileSizeParseError::UnexpectedEnding(ending)),
-		};
-
-		Ok(Self::from_bytes((number * multiplier as f64) as u64))
-	}
-}
-
 /// Global ranks in each skillset category
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -420,5 +273,53 @@ pub struct UserRank {
 }
 
 impl UserRank {
-	crate::impl_get8!(u32, a, a.overall);
+	crate::impl_get_skillset!(u32, a, a.overall);
+}
+
+pub trait SimpleReplay {
+	fn iter_deviations(&self) -> Box<dyn '_ + Iterator<Item = Option<f32>>>;
+
+	// TODO
+	// fn rescore<W: crate::Wife>(&self) -> crate::Wifescore { todo!() }
+
+	/// Finds the longest combo of notes evaluating to true in the given closure
+	/// 
+	/// The note deviations passed into the closure can be negative or positive, depending on
+	/// whether it was an early or a late hit. In case of a miss, the deviation is None.
+	/// 
+	/// # Example
+	/// Find the longest marvelous combo:
+	/// ```rust,ignore
+	/// let longest_marvelous_combo = replay.longest_combo(|d| d < 0.0225);
+	/// ```
+	fn longest_combo(&self, mut note_filter: impl FnMut(Option<f32>) -> bool) -> u32 {
+		crate::util::longest_true_sequence(
+			self
+				.iter_deviations()
+				.map(|d| note_filter(d))
+		)
+	}
+
+	/// Generate a [`crate::TapJudgements`] instance of this replay
+	fn tap_judgements(&self, judge: &crate::Judge) -> crate::TapJudgements {
+		let mut judgements = TapJudgements::default();
+		for deviation in self.iter_deviations() {
+			let judgement = match deviation {
+				Some(deviation) => judge.classify(deviation),
+				None => crate::TapJudgement::Miss,
+			};
+			judgements[judgement] += 1;
+		}
+		judgements
+	}
+}
+
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+pub enum TapJudgement {
+	Marvelous,
+	Perfect,
+	Great,
+	Good,
+	Bad,
+	Miss,
 }

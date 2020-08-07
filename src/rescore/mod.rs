@@ -17,32 +17,11 @@ pub struct ScoringResult {
 /// needs the entire list of hits available to it at the same time
 pub trait ScoringSystem: Sized {
 	/// Evaluate the scoring system on the given list of notes and hits. The lists must be sorted!
-	fn evaluate<W: crate::Wife>(note_seconds: &[f32], hit_seconds: &[f32]) -> ScoringResult;
-}
-
-pub trait SimpleReplay {
-	fn iter_deviations(&self) -> Box<dyn '_ + Iterator<Item = f32>>;
-
-	// TODO
-	// fn rescore<W: crate::Wife>(&self) -> crate::Wifescore { todo!() }
-
-	/// Finds the longest combo of notes in this replay such that all notes in the combo yield true
-	/// when their deviation is supplied into the given closure.
-	/// 
-	/// The note deviations passed into the closure will always be positive.
-	/// 
-	/// # Example
-	/// Find the longest marvelous combo:
-	/// ```rust,ignore
-	/// let longest_marvelous_combo = replay.longest_combo(|d| d < 0.0225);
-	/// ```
-	fn longest_combo(&self, mut note_filter: impl FnMut(f32) -> bool) -> u32 {
-		crate::util::longest_true_sequence(
-			self
-				.iter_deviations()
-				.map(|d| note_filter(d.abs()))
-		)
-	}
+	fn evaluate<W: crate::Wife>(
+		note_seconds: &[f32],
+		hit_seconds: &[f32],
+		judge: &crate::Judge,
+	) -> ScoringResult;
 }
 
 /// Calculates a wifescore from a list of notes per column and hits per column, plus the mine hits
@@ -53,6 +32,7 @@ pub fn rescore<S, W>(
 	hit_seconds_columns: &[Vec<f32>; 4],
 	num_mine_hits: u32,
 	num_hold_drops: u32,
+	judge: &crate::Judge,
 ) -> crate::Wifescore
 where
 	S: ScoringSystem,
@@ -61,7 +41,7 @@ where
 	let mut wifescore_sum = 0.0;
 	let mut num_judged_notes = 0;
 	for (note_seconds, hit_seconds) in izip!(note_seconds_columns, hit_seconds_columns) {
-		let column_scoring_result = S::evaluate::<W>(&note_seconds, &hit_seconds);
+		let column_scoring_result = S::evaluate::<W>(&note_seconds, &hit_seconds, judge);
 
 		wifescore_sum += column_scoring_result.wifescore_sum;
 		num_judged_notes += column_scoring_result.num_judged_notes;

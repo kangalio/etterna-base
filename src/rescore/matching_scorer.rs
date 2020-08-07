@@ -19,7 +19,7 @@ struct Hit {
 }
 
 impl Hit {
-	unsafe fn find_matching_note(&mut self, notes: *mut Vec<Note>) {
+	unsafe fn find_matching_note(&mut self, notes: *mut Vec<Note>, judge: &crate::Judge) {
 		if DEBUG { println!("Ok so, we're searching for a matching note for {}", self.second) }
 		let mut best_note: Option<&mut Note> = None;
 		let mut best_deviation = f32::INFINITY;
@@ -30,7 +30,7 @@ impl Hit {
 			let deviation = (note.second - self.second).abs();
 			
 			if deviation > best_deviation { continue }
-			if deviation > 0.180 { continue } // this is too far to be considered a match
+			if deviation > judge.bad_window { continue } // this is too far to be considered a match
 			
 			if DEBUG { println!("Found best note so far at {} (dev={})", note.second, deviation) }
 			
@@ -77,7 +77,7 @@ impl Hit {
 		// If the note previously had a hit assigned to it, we have just 
 		if let Some(prev_assigned_hit_to_be_relocated) = prev_assigned_hit_to_be_relocated {
 			if DEBUG { println!(">>> Ah yes, it was already assigned. Starting inner re-find...\n") }
-			(*prev_assigned_hit_to_be_relocated).find_matching_note(notes);
+			(*prev_assigned_hit_to_be_relocated).find_matching_note(notes, judge);
 			if DEBUG { println!("\n<<< Inner re-find done") }
 		}
 	}
@@ -87,7 +87,11 @@ impl Hit {
 // This function is unsafe because I'm using raw pointers within for ease of use. I really did
 // _not_ want to bother with RefCell/Rc/lifetimes. The rescoring algorithm is hard enough to
 // implement as is.
-unsafe fn column_rescore<W: crate::Wife>(mut notes: Vec<Note>, mut hits: Vec<Hit>) -> (f32, u64) {
+unsafe fn column_rescore<W: crate::Wife>(
+	mut notes: Vec<Note>,
+	mut hits: Vec<Hit>,
+	judge: &crate::Judge,
+) -> (f32, u64) {
 	use crate::util::MyItertools;
 
 	// use miss weights for stray taps for now. Maybe it would make for a better system with a
@@ -96,7 +100,7 @@ unsafe fn column_rescore<W: crate::Wife>(mut notes: Vec<Note>, mut hits: Vec<Hit
 
 	for hit in &mut hits {
 		if DEBUG { println!("Initial search for hit at {}", hit.second) }
-		hit.find_matching_note(&mut notes);
+		hit.find_matching_note(&mut notes, judge);
 		if DEBUG { println!("Initial search for hit at {} completed -> {:?}", hit.second,
 				hit.assigned_note.map(|n| (*n).second)); }
 		if DEBUG { println!(".") }
@@ -129,7 +133,7 @@ unsafe fn column_rescore<W: crate::Wife>(mut notes: Vec<Note>, mut hits: Vec<Hit
 	let mut num_judged_notes = 0;
 	let mut wifescore_sum: f32 = notes.iter()
 			.filter_map(|note| note.assigned_hit.as_ref()) // only notes with assigned hits (i.e. notes that were hit)
-			.map(|assigned_hit| W::calc(assigned_hit.deviation))
+			.map(|assigned_hit| W::calc(assigned_hit.deviation, judge))
 			.count_into(&mut num_judged_notes)
 			.sum();
 	
@@ -148,7 +152,11 @@ unsafe fn column_rescore<W: crate::Wife>(mut notes: Vec<Note>, mut hits: Vec<Hit
 pub struct MatchingScorer;
 
 impl ScoringSystem for MatchingScorer {
-	fn evaluate<W: crate::Wife>(note_seconds: &[f32], hit_seconds: &[f32]) -> ScoringResult {
+	fn evaluate<W: crate::Wife>(
+		note_seconds: &[f32],
+		hit_seconds: &[f32],
+		judge: &crate::Judge,
+	) -> ScoringResult {
 		let notes: Vec<Note> = note_seconds.iter()
 				.map(|&second| Note { second, assigned_hit: None })
 				.collect();
@@ -156,7 +164,7 @@ impl ScoringSystem for MatchingScorer {
 				.map(|&second| Hit { second, assigned_note: None })
 				.collect();
 		
-		let (wifescore_sum, num_judged_notes) = unsafe { column_rescore::<W>(notes, hits) };
+		let (wifescore_sum, num_judged_notes) = unsafe { column_rescore::<W>(notes, hits, judge) };
 		ScoringResult { wifescore_sum, num_judged_notes }
 	}
 }

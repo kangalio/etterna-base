@@ -17,6 +17,7 @@ btoi = "0.4" # fast int parsing in replays parsing (it's faster than lexical's i
 # fast float parsing in replays analysis. default features disabled because we wanna use the fast
 # incorrect algorithms
 lexical-core = { version = "0.7", default-features = false, features = ["std"] }
+permutation = "0.2"
 
 [features]
 default = []

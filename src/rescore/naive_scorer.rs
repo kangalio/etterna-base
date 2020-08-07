@@ -14,7 +14,11 @@ struct Note {
 pub struct NaiveScorer;
 
 impl ScoringSystem for NaiveScorer {
-	fn evaluate<W: crate::Wife>(note_seconds: &[f32], hit_seconds: &[f32]) -> ScoringResult {
+	fn evaluate<W: crate::Wife>(
+		note_seconds: &[f32],
+		hit_seconds: &[f32],
+		judge: &crate::Judge,
+	) -> ScoringResult {
 		let mut notes: Vec<Note> = note_seconds.iter()
 				.map(|&second| Note { second, is_claimed: false })
 				.collect();
@@ -44,7 +48,7 @@ impl ScoringSystem for NaiveScorer {
 			if DEBUG { println!("{:05.2}: {}", hit_second, best_note_deviation); }
 
 			best_note.is_claimed = true;
-			wifescore_sum += W::calc(best_note_deviation);
+			wifescore_sum += W::calc(best_note_deviation, judge);
 			num_judged_notes += 1;
 		}
 

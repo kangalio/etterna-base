@@ -1,51 +1,82 @@
-/// Contents of an Etterna ReplayV2 replay file. See [`parse_replay`] for more
-pub struct ReplayFileData {
-	pub notes: Vec<ReplayFileNote>,
+use thiserror::Error;
+
+/// Contents of an Etterna ReplayV2 replay file. See [`parse_replay_v2_fast`] for more
+#[derive(Debug, Clone, PartialEq)]
+pub struct ReplayV2Fast {
+	pub notes: Vec<ReplayV2Note>,
 	pub num_mine_hits: u32,
 	pub num_hold_drops: u32,
 }
 
-/// Represents a single note in a [`ReplayFileData`]
-pub struct ReplayFileNote {
+impl ReplayV2Fast {
+	/// `note_seconds` must be sorted. Note that a replay is _not_ sorted, at least the note seconds
+	/// aren't.
+	pub fn split_into_lanes(&self,
+		timing_info: &crate::TimingInfo,
+	) -> ([Vec<f32>; 4], [Vec<f32>; 4]) {
+		let unsorted_ticks: Vec<u32> = self.notes.iter().map(|n| n.tick).collect();		
+		let permutation = permutation::sort(&unsorted_ticks[..]);
+
+		let ticks = permutation.apply_slice(&unsorted_ticks[..]);
+		let note_seconds = timing_info.ticks_to_seconds(&ticks);
+
+		let notes = permutation.apply_slice(&self.notes[..]); // sorted by note
+
+		let mut note_seconds_columns = [vec![], vec![], vec![], vec![]];
+		let mut hit_seconds_columns = [vec![], vec![], vec![], vec![]];
+
+		for (&note_second, note) in note_seconds.iter().zip(notes) {
+			if note.column >= 4 { continue }
+
+			note_seconds_columns[note.column as usize].push(note_second);
+			if let Some(deviation) = note.deviation { // if not a miss
+				hit_seconds_columns[note.column as usize].push(note_second + deviation);
+			}
+		}
+
+		(note_seconds_columns, hit_seconds_columns)
+	}
+}
+
+impl crate::SimpleReplay for ReplayV2Fast {
+    fn iter_deviations(&self) -> Box<dyn '_ + Iterator<Item = Option<f32>>> {
+        Box::new(self.notes.iter().map(|n| n.deviation))
+    }
+}
+
+/// Represents a single note in a v2 replay
+#[derive(Debug, Clone, PartialEq)]
+pub struct ReplayV2Note {
 	pub tick: u32,
-	pub deviation: f32,
+	pub deviation: Option<f32>,
 	pub column: u8,
 }
 
-fn parse_sm_float(string: &[u8]) -> Option<f32> {
-	//~ let string = &string[..string.len()-1]; // cut off last digit to speed up float parsing # REMEMBER
-	lexical_core::parse_lossy(string).ok()
-	
-	/*
-	// For performance reasons, this assumes that the passed-in bytestring is in the format
-	// -?[01]\.\d{6} (optionally a minus, then 0 or 1, a dot, and then 6 floating point digits. (This
-	// function only parses 5 of those floating point digits though). Example string: "-0.010371"
-	
-	let is_negative = string[0] == b'-';
-	let string = if is_negative { &string[1..] } else { string }; // Strip minus
-	
-	let mut digits_part: u32 = 0;
-	digits_part += (string[6] - b'0') as u32 * 1;
-	digits_part += (string[5] - b'0') as u32 * 10;
-	digits_part += (string[4] - b'0') as u32 * 100;
-	digits_part += (string[3] - b'0') as u32 * 1000;
-	digits_part += (string[2] - b'0') as u32 * 10000;
-	digits_part += (string[0] - b'0') as u32 * 100000;
-	
-	let mut number = digits_part as f32 / 100000 as f32;
-	
-	if is_negative {
-		number = -number;
+impl ReplayV2Note {
+	pub fn is_miss(&self) -> bool {
+		self.deviation.is_none()
 	}
-	
-	return Some(number);
-	*/
+}
+
+#[derive(Debug, Error)]
+pub enum ReplayParseError {
+	#[error("Replay file line {line_num} had no contain tick information")]
+	MissingTick { line_num: usize },
+	#[error("Replay file line {line_num} had no contain deviation information")]
+	MissingDeviation { line_num: usize },
+	#[error("Replay file line {line_num} had no contain note lane information")]
+	MissingLane { line_num: usize },
 }
 
 /// Parse an Etterna ReplaysV2 replay file. Any invalid lines are skipped
 /// 
 /// This function is fairly heavily optimized, due to usage in etterna-graph.
-pub fn parse_replay(bytes: &[u8]) -> ReplayFileData {
+/// 
+/// If you pass `false` for the `exact` parameter, a lossy float parsing function will be used,
+/// which gains performance at the expense of accuracy.
+pub fn parse_replay_v2_fast(bytes: &[u8], exact: bool) -> ReplayV2Fast {
+	let parse_float: fn(&[u8]) -> Result<f32, _> = if exact { lexical_core::parse } else { lexical_core::parse_lossy };
+
 	let approx_max_num_lines = bytes.len() / 16; // 16 is a pretty good approximation	
 	
 	let mut notes = Vec::with_capacity(approx_max_num_lines);
@@ -63,19 +94,28 @@ pub fn parse_replay(bytes: &[u8]) -> ReplayFileData {
 		
 		let tick = token_iter.next().expect("Missing tick token");
 		let tick: u32 = match btoi::btou(tick) { Ok(x) => x, Err(_) => continue };
-		let deviation = token_iter.next().expect("Missing tick token");
-		let deviation = match parse_sm_float(deviation) { Some(x) => x, None => continue } as f32;
+
+		let deviation = token_iter.next().expect("Missing deviation token");
+		let deviation = if deviation.starts_with(b"1.0") {
+			None
+		} else {
+			match parse_float(deviation) {
+				Ok(x) => Some(x),
+				Err(_) => continue
+			}
+		};
+
 		// remainder has the rest of the string in one slice, without any whitespace info or such.
 		// luckily we know the points of interest's exact positions, so we can just directly index
 		// into the remainder string to get what we need
-		let remainder = token_iter.next().expect("Missing tick token");
+		let remainder = token_iter.next().expect("Missing column token");
 		let column: u8 = remainder[0] - b'0';
 		let note_type: u8 = if remainder.len() >= 3 { remainder[2] - b'0' } else { 1 };
 		
 		// We only want tap notes and hold heads
 		match note_type {
 			1 | 2 => { // taps and hold heads
-				notes.push(ReplayFileNote { tick, deviation, column });
+				notes.push(ReplayV2Note { tick, deviation, column });
 			},
 			4 => num_mine_hits += 1, // mines only appear in replay file if they were hit
 			5 | 7 => {}, // lifts and fakes
@@ -83,21 +123,5 @@ pub fn parse_replay(bytes: &[u8]) -> ReplayFileData {
 		}
 	}
 	
-	ReplayFileData { notes, num_mine_hits, num_hold_drops }
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-	use crate::assert_float_eq;
-	
-	#[test]
-	fn test_sm_float_parsing() {
-		assert_float_eq!(parse_sm_float(b"-0.018477").unwrap(), -0.018477;
-				epsilon=0.00001);
-		assert_float_eq!(parse_sm_float(b"1.000000").unwrap(), 1.000000;
-				epsilon=0.00001);
-		assert_float_eq!(parse_sm_float(b"0.919191").unwrap(), 0.919191;
-				epsilon=0.00001);
-	}
+	ReplayV2Fast { notes, num_mine_hits, num_hold_drops }
 }

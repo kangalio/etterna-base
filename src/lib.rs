@@ -30,7 +30,7 @@ use rayon::iter::ParallelIterator;
 // this needs to be here for some reason, and it also needs to be publically accessible because MACROS
 #[doc(hidden)]
 #[macro_export]
-macro_rules! impl_get8 {
+macro_rules! impl_get_skillset {
 	($return_type:ty, $self_:ident, $overall_getter:expr) => {
 		/// Get a specific skillset value
 		pub fn get(&self, skillset: impl Into<Skillset8>) -> $return_type {
@@ -48,7 +48,7 @@ macro_rules! impl_get8 {
 		}
 	};
 	($return_type:ty, $self_:ident, $overall_getter:expr, $overall_getter_pre_070:expr) => {
-		crate::impl_get8!($return_type, $self_, $overall_getter);
+		crate::impl_get_skillset!($return_type, $self_, $overall_getter);
 
 		/// Get a specific skillset value. If Overall was requested, use the pre-0.70 algorithm
 		/// for calculation.
@@ -67,6 +67,17 @@ macro_rules! impl_get8 {
 		}
 	}
 }
+
+// do we even need this?
+// #[doc(hidden)]
+// #[macro_export]
+// macro_rules! impl_get_tap_judgement {
+// 	($return_type:ty) => {
+// 		pub fn get(&self, judgement: TapJudgement) -> $return_type {
+
+// 		}
+// 	}
+// }
 
 #[cfg(feature = "parallel")]
 fn par_iter_maybe<I>(collection: I) -> I::Iter

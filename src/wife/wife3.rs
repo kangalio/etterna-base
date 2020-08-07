@@ -34,20 +34,19 @@ impl Wife3 {
 	// Takes a hit deviation in seconds and returns the wife3 score, scaled to max=2 (!). Sign of
 	// parameter doesn't matter. This is a Rust translation of
 	// https://github.com/etternagame/etterna/blob/5b154d4ff368c2187b1a08010aaeeff30ce125b0/src/RageUtil/Utils/RageUtil.h#L163
-	fn calc_inner(deviation: f32/*, ts: f32*/) -> f32 {
-		const TS: f32 = 1.0; // Timing scale = 1 = J4
-		
+	fn calc_inner(deviation: f32, judge: &crate::Judge) -> f32 {
 		// so judge scaling isn't so extreme
 		const J_POW: f32 = 0.75;
 		// min/max points
 		const MAX_POINTS: f32 = 2.0;
+		let ts = judge.timing_scale;
 		// offset at which points starts decreasing(ms)
-		let ridic = 5.0 * TS;
+		let ridic = 5.0 * ts;
 
 		// technically the max boo is always 180ms above j4 however this is
 		// immaterial to the end purpose of the scoring curve - assignment of point
 		// values
-		let max_boo_weight = 180.0 * TS;
+		let max_boo_weight = 180.0 * ts;
 
 		// need positive values for this
 		let maxms = (deviation * 1000.0).abs();
@@ -58,8 +57,8 @@ impl Wife3 {
 		}
 
 		// piecewise inflection
-		let zero = 65.0 * TS.powf(J_POW);
-		let dev = 22.7 * TS.powf(J_POW);
+		let zero = 65.0 * ts.powf(J_POW);
+		let dev = 22.7 * ts.powf(J_POW);
 
 		if maxms <= zero {
 			MAX_POINTS * ett_erf((zero - maxms) / dev)
@@ -77,7 +76,7 @@ impl Wife for Wife3 {
 	const HOLD_DROP_WEIGHT: f32 = Self::INNER_HOLD_DROP_WEIGHT / 2.0;
 	const MISS_WEIGHT: f32 = Self::INNER_MISS_WEIGHT / 2.0;
 
-	fn calc(deviation: f32) -> f32 {
-		Self::calc_inner(deviation) / 2.0 // Divide by two to revert the max=2 scaling
+	fn calc(deviation: f32, judge: &crate::Judge) -> f32 {
+		Self::calc_inner(deviation, judge) / 2.0 // Divide by two to revert the max=2 scaling
 	}
 }
