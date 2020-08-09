@@ -72,19 +72,6 @@ impl<'a, I: Iterator> Iterator for CountInto<'a, I> {
 	}
 }
 
-pub trait MyItertools {
-	fn count_into(self, count_variable: &mut usize) -> CountInto<Self>
-			where Self: Iterator, Self: Sized;
-}
-
-impl<I: Iterator> MyItertools for I {
-	// This function counts the number of elements in the iterator without consuming the iterator
-	fn count_into(self, count_variable: &mut usize) -> CountInto<Self> {
-		*count_variable = 0;
-		CountInto { iterator: self, count_variable }
-	}
-}
-
 // Like slice.split(b'\n'), but with optimizations based on a minimum line length assumption
 // When min_line_length is zero, the expected result for "xxx\n" would be ["xxx", ""]. However,
 // the result is gonna be just ["xxx"]. I know it's unintuitive, but I dunno how to fix

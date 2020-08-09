@@ -92,8 +92,6 @@ unsafe fn column_rescore<W: crate::Wife>(
 	mut hits: Vec<Hit>,
 	judge: &crate::Judge,
 ) -> (f32, u64) {
-	use crate::util::MyItertools;
-
 	// use miss weights for stray taps for now. Maybe it would make for a better system with a
 	// tweaked value - but who cares, my system won't ever get serious adoption anyway /shrug
 	let stray_tap_weight: f32 = W::MISS_WEIGHT;
@@ -130,11 +128,10 @@ unsafe fn column_rescore<W: crate::Wife>(
 		println!("Found {} misses and {} stray taps", num_misses, num_stray_taps);
 	}
 
-	let mut num_judged_notes = 0;
+	let num_judged_notes = notes.len(); // is this correct???? was I that stupid???
 	let mut wifescore_sum: f32 = notes.iter()
 			.filter_map(|note| note.assigned_hit.as_ref()) // only notes with assigned hits (i.e. notes that were hit)
 			.map(|assigned_hit| W::calc(assigned_hit.deviation, judge))
-			.count_into(&mut num_judged_notes)
 			.sum();
 	
 	// penalize

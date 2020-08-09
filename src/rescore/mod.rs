@@ -50,6 +50,8 @@ where
 	wifescore_sum += W::MINE_HIT_WEIGHT * num_mine_hits as f32;
 	wifescore_sum += W::HOLD_DROP_WEIGHT * num_hold_drops as f32;
 
+	println!("Etterna wife points: {}", wifescore_sum * 2.0);
+
 	let wifescore = wifescore_sum / num_judged_notes as f32;
 	crate::Wifescore::from_proportion(wifescore)
 		.expect("Invalid wifescore was generated. Maybe the given notes and hits vectors were empty")

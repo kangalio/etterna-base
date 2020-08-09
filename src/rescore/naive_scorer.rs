@@ -28,13 +28,15 @@ impl ScoringSystem for NaiveScorer {
 		for hit_second in hit_seconds {
 			let mut best_note: Option<&mut Note> = None;
 			let mut best_note_deviation = f32::INFINITY;
+			let mut best_note_deviation_no_abs = 0.0;
 			for note in &mut notes {
-				let deviation = (note.second - hit_second).abs();
-				if deviation > 0.18 { continue }
+				let deviation = (hit_second - note.second).abs();
+				if deviation > judge.bad_window { continue }
 				
 				if note.is_claimed { continue }
 				
 				if deviation < best_note_deviation {
+					best_note_deviation_no_abs = hit_second - note.second;
 					best_note = Some(note);
 					best_note_deviation = deviation;
 				}
@@ -43,19 +45,26 @@ impl ScoringSystem for NaiveScorer {
 			// If no note was found, this is either a stray tap or the player has mashed SO hard
 			// that all the available notes are already claimed by his mashing. In any case, we're
 			// not treating such cases in the naive implementation, so we `continue`
-			let best_note = match best_note { Some(a) => a, None => continue };
+			let best_note = match best_note {
+				Some(a) => a,
+				None => {
+					println!("No non-claimed notes were found for this hit at {}", hit_second);
+					continue;
+				},
+			};
 
 			if DEBUG { println!("{:05.2}: {}", hit_second, best_note_deviation); }
+			print!("{:.5}, ", best_note_deviation_no_abs);
 
 			best_note.is_claimed = true;
 			wifescore_sum += W::calc(best_note_deviation, judge);
 			num_judged_notes += 1;
 		}
+		println!();
 
 		let num_misses = notes.iter().filter(|n| !n.is_claimed).count();
-		if DEBUG { println!("wife points no misses: {}", wifescore_sum * 2.0); }
 		wifescore_sum += W::MISS_WEIGHT * num_misses as f32;
-		if DEBUG { println!("wife points sum w/ misses: {}", wifescore_sum * 2.0); }
+		num_judged_notes += num_misses as u64; // I forgot this for the longest time. Full brainfart
 
 		ScoringResult { wifescore_sum, num_judged_notes }
 	}
