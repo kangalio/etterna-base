@@ -1,6 +1,7 @@
 use super::{ScoringSystem, ScoringResult};
 
 const DEBUG: bool = false;
+const DEBUG_JUDGEMENT_BUG: bool = false;
 
 struct Note {
 	second: f32,
@@ -19,6 +20,8 @@ impl ScoringSystem for NaiveScorer {
 		hit_seconds: &[f32],
 		judge: &crate::Judge,
 	) -> ScoringResult {
+		assert!(crate::util::is_sorted(hit_seconds));
+
 		let mut notes: Vec<Note> = note_seconds.iter()
 				.map(|&second| Note { second, is_claimed: false })
 				.collect();
@@ -48,19 +51,19 @@ impl ScoringSystem for NaiveScorer {
 			let best_note = match best_note {
 				Some(a) => a,
 				None => {
-					println!("No non-claimed notes were found for this hit at {}", hit_second);
+					if DEBUG { println!("No non-claimed notes were found for this hit at {}", hit_second); }
 					continue;
 				},
 			};
 
 			if DEBUG { println!("{:05.2}: {}", hit_second, best_note_deviation); }
-			print!("{:.5}, ", best_note_deviation_no_abs);
+			if DEBUG_JUDGEMENT_BUG { print!("{:.5}, ", best_note_deviation_no_abs); }
 
 			best_note.is_claimed = true;
 			wifescore_sum += W::calc(best_note_deviation, judge);
 			num_judged_notes += 1;
 		}
-		println!();
+		if DEBUG_JUDGEMENT_BUG { println!(); }
 
 		let num_misses = notes.iter().filter(|n| !n.is_claimed).count();
 		wifescore_sum += W::MISS_WEIGHT * num_misses as f32;

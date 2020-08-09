@@ -128,15 +128,20 @@ unsafe fn column_rescore<W: crate::Wife>(
 		println!("Found {} misses and {} stray taps", num_misses, num_stray_taps);
 	}
 
-	let num_judged_notes = notes.len(); // is this correct???? was I that stupid???
+	let mut num_matched_hits = 0;
+	// These are only the matched notes/hits! Still need to punish for misses and strays
 	let mut wifescore_sum: f32 = notes.iter()
-			.filter_map(|note| note.assigned_hit.as_ref()) // only notes with assigned hits (i.e. notes that were hit)
-			.map(|assigned_hit| W::calc(assigned_hit.deviation, judge))
-			.sum();
+		.filter_map(|note| note.assigned_hit.as_ref()) // only notes with assigned hits (i.e. notes that were hit)
+		.map(|assigned_hit| W::calc(assigned_hit.deviation, judge))
+		.inspect(|_| num_matched_hits += 1)
+		.sum();
 	
 	// penalize
 	wifescore_sum += W::MISS_WEIGHT * num_misses as f32;
 	wifescore_sum += stray_tap_weight * num_stray_taps as f32;
+
+	// is this correct?? I think so but I'm insecure about this
+	let num_judged_notes = num_matched_hits + num_misses + num_stray_taps;
 	
 	(wifescore_sum, num_judged_notes as u64)
 }
@@ -154,6 +159,8 @@ impl ScoringSystem for MatchingScorer {
 		hit_seconds: &[f32],
 		judge: &crate::Judge,
 	) -> ScoringResult {
+		assert!(crate::util::is_sorted(hit_seconds));
+
 		let notes: Vec<Note> = note_seconds.iter()
 				.map(|&second| Note { second, assigned_hit: None })
 				.collect();

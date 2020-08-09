@@ -16,7 +16,8 @@ pub struct ScoringResult {
 /// Trait for a scorer that operates on a single column and evaluates all hits on that column. It
 /// needs the entire list of hits available to it at the same time
 pub trait ScoringSystem: Sized {
-	/// Evaluate the scoring system on the given list of notes and hits. The lists must be sorted!
+	/// Evaluate the scoring system on the given list of notes and hits. The lists must be sorted
+	/// by the hits!
 	fn evaluate<W: crate::Wife>(
 		note_seconds: &[f32],
 		hit_seconds: &[f32],
@@ -41,6 +42,9 @@ where
 	let mut wifescore_sum = 0.0;
 	let mut num_judged_notes = 0;
 	for (note_seconds, hit_seconds) in izip!(note_seconds_columns, hit_seconds_columns) {
+		assert!(crate::util::is_sorted(hit_seconds));
+		assert!(crate::util::is_sorted(note_seconds));
+
 		let column_scoring_result = S::evaluate::<W>(&note_seconds, &hit_seconds, judge);
 
 		wifescore_sum += column_scoring_result.wifescore_sum;
@@ -49,8 +53,6 @@ where
 
 	wifescore_sum += W::MINE_HIT_WEIGHT * num_mine_hits as f32;
 	wifescore_sum += W::HOLD_DROP_WEIGHT * num_hold_drops as f32;
-
-	println!("Etterna wife points: {}", wifescore_sum * 2.0);
 
 	let wifescore = wifescore_sum / num_judged_notes as f32;
 	crate::Wifescore::from_proportion(wifescore)

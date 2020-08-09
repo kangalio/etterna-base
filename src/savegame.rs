@@ -9,8 +9,7 @@ pub struct ReplayV2Fast {
 }
 
 impl ReplayV2Fast {
-	/// `note_seconds` must be sorted. Note that a replay is _not_ sorted, at least the note seconds
-	/// aren't.
+	/// The returned vectors are sorted chronologically by the **note time**.
 	pub fn split_into_lanes(&self,
 		timing_info: &crate::TimingInfo,
 	) -> ([Vec<f32>; 4], [Vec<f32>; 4]) {

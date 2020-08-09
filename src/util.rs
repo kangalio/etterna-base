@@ -129,7 +129,7 @@ pub fn first_and_last_and_count<I: std::iter::Iterator>(mut iterator: I) -> (Opt
 }
 
 /// Does exactly what it says on the box
-pub fn is_sorted<T: Ord>(data: &[T]) -> bool {
+pub fn is_sorted<T: PartialOrd>(data: &[T]) -> bool {
 	data.windows(2).all(|w| w[0] <= w[1])
 }
 
