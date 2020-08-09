@@ -284,9 +284,8 @@ pub trait SimpleReplay {
 
 	/// Finds the longest combo of notes evaluating to true in the given closure
 	/// 
-	/// The note deviations passed into the closure can be negative or positive, depending on
-	/// whether it was an early or a late hit. In case of a miss, the closure call is skipped
-	/// entirely and `false` is inserted.
+	/// The note deviations passed into the closure are always positive. In case of a miss, the
+	/// closure call is skipped entirely and `false` is inserted.
 	/// 
 	/// # Example
 	/// Find the longest marvelous combo:
@@ -298,7 +297,7 @@ pub trait SimpleReplay {
 			self
 				.iter_deviations()
 				.map(|d| match d {
-					Some(deviation) => note_filter(deviation),
+					Some(deviation) => note_filter(deviation.abs()),
 					None => false, // if it was a miss, the combo will by definition break
 				})
 		)
