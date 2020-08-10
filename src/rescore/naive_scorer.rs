@@ -27,7 +27,6 @@ impl ScoringSystem for NaiveScorer {
 				.collect();
 		
 		let mut wifescore_sum = 0.0;
-		let mut num_judged_notes: u64 = 0;
 		for hit_second in hit_seconds {
 			let mut best_note: Option<&mut Note> = None;
 			let mut best_note_deviation = f32::INFINITY;
@@ -61,14 +60,12 @@ impl ScoringSystem for NaiveScorer {
 
 			best_note.is_claimed = true;
 			wifescore_sum += W::calc(best_note_deviation, judge);
-			num_judged_notes += 1;
 		}
 		if DEBUG_JUDGEMENT_BUG { println!(); }
 
 		let num_misses = notes.iter().filter(|n| !n.is_claimed).count();
 		wifescore_sum += W::MISS_WEIGHT * num_misses as f32;
-		num_judged_notes += num_misses as u64; // I forgot this for the longest time. Full brainfart
 
-		ScoringResult { wifescore_sum, num_judged_notes }
+		ScoringResult { wifescore_sum, num_judged_notes: notes.len() as _ }
 	}
 }
