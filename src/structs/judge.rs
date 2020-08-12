@@ -39,9 +39,39 @@ impl Judge {
 		}
 	}
 
-	/// Returns whether the deviation is considered a miss or not
+	/// Whether the given deviation is a combo breaker (CB)
+	pub fn is_cb(&self, deviation: f32) -> bool {
+		deviation <= self.great_window
+	}
+
+	/// Whether the given deviation is considered marvelous
+	pub fn is_marv(&self, deviation: f32) -> bool {
+		self.classify(deviation) == crate::TapJudgement::Marvelous
+	}
+
+	/// Whether the given deviation is considered perfect
+	pub fn is_perf(&self, deviation: f32) -> bool {
+		self.classify(deviation) == crate::TapJudgement::Perfect
+	}
+
+	/// Whether the given deviation is considered great
+	pub fn is_great(&self, deviation: f32) -> bool {
+		self.classify(deviation) == crate::TapJudgement::Great
+	}
+
+	/// Whether the given deviation is considered good
+	pub fn is_good(&self, deviation: f32) -> bool {
+		self.classify(deviation) == crate::TapJudgement::Good
+	}
+
+	/// Whether the given deviation is considered bad
+	pub fn is_bad(&self, deviation: f32) -> bool {
+		self.classify(deviation) == crate::TapJudgement::Bad
+	}
+
+	/// Whether the given deviation is considered a bad
 	pub fn is_miss(&self, deviation: f32) -> bool {
-		return deviation.abs() > self.bad_window;
+		self.classify(deviation) == crate::TapJudgement::Miss
 	}
 }
 

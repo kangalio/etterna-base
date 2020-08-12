@@ -279,7 +279,7 @@ impl UserRank {
 }
 
 pub trait SimpleReplay {
-	fn iter_deviations(&self) -> Box<dyn '_ + Iterator<Item = Option<f32>>>;
+	fn iter_hits(&self) -> Box<dyn '_ + Iterator<Item = crate::Hit>>;
 
 	// TODO
 	// fn rescore<W: crate::Wife>(&self) -> crate::Wifescore { todo!() }
@@ -292,34 +292,24 @@ pub trait SimpleReplay {
 	/// # Example
 	/// Find the longest marvelous combo:
 	/// ```rust,ignore
-	/// let longest_marvelous_combo = replay.longest_combo(|d| d < 0.0225);
+	/// let longest_marvelous_combo = replay.longest_combo(|d| d.is_marv(etterna::J4));
 	/// ```
-	fn longest_combo(&self, mut note_filter: impl FnMut(f32) -> bool) -> u32 {
-		crate::util::longest_true_sequence(
-			self
-				.iter_deviations()
-				.map(|d| match d {
-					Some(deviation) => note_filter(deviation.abs()),
-					None => false, // if it was a miss, the combo will by definition break
-				})
-		)
+	fn longest_combo(&self, hit_filter: impl FnMut(crate::Hit) -> bool) -> u32 {
+		crate::util::longest_true_sequence(self.iter_hits().map(hit_filter))
 	}
 
 	/// Generate a [`crate::TapJudgements`] instance of this replay
 	fn tap_judgements(&self, judge: &crate::Judge) -> crate::TapJudgements {
 		let mut judgements = TapJudgements::default();
-		for deviation in self.iter_deviations() {
-			let judgement = match deviation {
-				Some(deviation) => judge.classify(deviation),
-				None => crate::TapJudgement::Miss,
-			};
-			judgements[judgement] += 1;
+		for hit in self.iter_hits() {
+			judgements[hit.classify(judge)] += 1;
 		}
 		judgements
 	}
 }
 
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TapJudgement {
 	Marvelous,
 	Perfect,
@@ -327,4 +317,88 @@ pub enum TapJudgement {
 	Good,
 	Bad,
 	Miss,
+}
+
+/// Represents a player hit of a single note
+/// 
+/// The deviation value is in seconds and may be negative
+#[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum Hit {
+	Hit { deviation: f32 },
+	Miss,
+}
+
+impl Hit {
+	pub fn deviation(&self) -> Option<f32> {
+		match *self {
+			Self::Hit { deviation } => Some(deviation),
+			Self::Miss => None,
+		}
+	}
+
+	pub fn classify(&self, judge: &crate::Judge) -> TapJudgement {
+		match *self {
+			Self::Hit { deviation } => judge.classify(deviation),
+			Self::Miss => TapJudgement::Miss,
+		}
+	}
+
+	pub fn is_cb(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_cb(deviation),
+			Self::Miss => false,
+		}
+	}
+
+	pub fn is_marv(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_marv(deviation),
+			Self::Miss => false,
+		}
+	}
+
+	pub fn is_perf(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_perf(deviation),
+			Self::Miss => false,
+		}
+	}
+
+	pub fn is_great(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_great(deviation),
+			Self::Miss => false,
+		}
+	}
+
+	pub fn is_good(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_good(deviation),
+			Self::Miss => false,
+		}
+	}
+
+	pub fn is_bad(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_bad(deviation),
+			Self::Miss => false,
+		}
+	}
+
+	/// Whether this hit is considered a miss
+	/// 
+	/// ```rust
+	/// # use etterna_base::{Hit, J1, J4};
+	/// assert!(Hit::Hit { deviation: -0.02 }.is_miss(J4) == false);
+	/// assert!(Hit::Hit { deviation: 0.20 }.is_miss(J4) == true);
+	/// assert!(Hit::Hit { deviation: 0.20 }.is_miss(J1) == false);
+	/// assert!(Hit::Miss.is_miss(J1) == true);
+	/// ```
+	pub fn is_miss(&self, judge: &crate::Judge) -> bool {
+		match *self {
+			Self::Hit { deviation } => judge.is_miss(deviation),
+			Self::Miss => true,
+		}
+	}
 }

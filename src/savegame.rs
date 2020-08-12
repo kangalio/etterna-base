@@ -32,7 +32,7 @@ impl ReplayV2Fast {
 			let note_second = note_second / rate.as_f32();
 
 			note_seconds_columns[note.column as usize].push(note_second);
-			if let Some(deviation) = note.deviation { // if not a miss
+			if let crate::Hit::Hit { deviation } = note.hit {
 				hit_seconds_columns[note.column as usize].push(note_second + deviation);
 			}
 		}
@@ -42,8 +42,8 @@ impl ReplayV2Fast {
 }
 
 impl crate::SimpleReplay for ReplayV2Fast {
-    fn iter_deviations(&self) -> Box<dyn '_ + Iterator<Item = Option<f32>>> {
-        Box::new(self.notes.iter().map(|n| n.deviation))
+    fn iter_hits(&self) -> Box<dyn '_ + Iterator<Item = crate::Hit>> {
+        Box::new(self.notes.iter().map(|n| n.hit))
     }
 }
 
@@ -51,14 +51,8 @@ impl crate::SimpleReplay for ReplayV2Fast {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReplayV2Note {
 	pub tick: u32,
-	pub deviation: Option<f32>,
+	pub hit: crate::Hit,
 	pub column: u8,
-}
-
-impl ReplayV2Note {
-	pub fn is_miss(&self) -> bool {
-		self.deviation.is_none()
-	}
 }
 
 #[derive(Debug, Error)]
@@ -100,12 +94,13 @@ pub fn parse_replay_v2_fast(bytes: &[u8], exact: bool) -> ReplayV2Fast {
 
 		let deviation = token_iter.next().expect("Missing deviation token");
 		let deviation = if deviation.starts_with(b"1.0") {
-			None
+			crate::Hit::Miss
 		} else {
-			match parse_float(deviation) {
-				Ok(x) => Some(x),
+			let deviation = match parse_float(deviation) {
+				Ok(x) => x,
 				Err(_) => continue
-			}
+			};
+			crate::Hit::Hit { deviation }
 		};
 
 		// remainder has the rest of the string in one slice, without any whitespace info or such.
@@ -118,7 +113,7 @@ pub fn parse_replay_v2_fast(bytes: &[u8], exact: bool) -> ReplayV2Fast {
 		// We only want tap notes and hold heads
 		match note_type {
 			1 | 2 => { // taps and hold heads
-				notes.push(ReplayV2Note { tick, deviation, column });
+				notes.push(ReplayV2Note { tick, hit: deviation, column });
 			},
 			4 => num_mine_hits += 1, // mines only appear in replay file if they were hit
 			5 | 7 => {}, // lifts and fakes
