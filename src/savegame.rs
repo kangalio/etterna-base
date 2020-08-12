@@ -12,6 +12,7 @@ impl ReplayV2Fast {
 	/// The returned vectors are sorted chronologically by the **note time**.
 	pub fn split_into_lanes(&self,
 		timing_info: &crate::TimingInfo,
+		rate: crate::Rate,
 	) -> ([Vec<f32>; 4], [Vec<f32>; 4]) {
 		let unsorted_ticks: Vec<u32> = self.notes.iter().map(|n| n.tick).collect();		
 		let permutation = permutation::sort(&unsorted_ticks[..]);
@@ -26,6 +27,8 @@ impl ReplayV2Fast {
 
 		for (&note_second, note) in note_seconds.iter().zip(notes) {
 			if note.column >= 4 { continue }
+
+			let note_second = note_second / rate.as_f32();
 
 			note_seconds_columns[note.column as usize].push(note_second);
 			if let Some(deviation) = note.deviation { // if not a miss

@@ -175,7 +175,7 @@ impl Wifescore {
 
 impl std::fmt::Display for Wifescore {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}%", self.as_percent())
+        write!(f, "{:.2}%", self.as_percent())
     }
 }
 
@@ -188,7 +188,7 @@ impl Ord for Wifescore {
 // This can't be a derive for whatever reason /shrug
 impl Eq for Wifescore {}
 
-// we need this wrapper because REDACTED
+// we need this wrapper because <!'#]]]A~REDÅCTED~{#"$ ")=}
 macro_rules! doc_comment {
 	($comment:expr, $($stuff:tt)*) => { #[doc = $comment] $($stuff)* };
 }
@@ -248,9 +248,11 @@ macro_rules! etterna_data_key {
 			fn as_ref(&self) -> &str { self.as_str() }
 		}
 
-		impl std::convert::TryFrom<String> for $name {
-			type Error = ();
-			fn try_from(key: String) -> Result<Self, ()> { Self::new(key).ok_or(()) }
+		impl std::str::FromStr for $name {
+			type Err = ();
+			fn from_str(key: &str) -> Result<Self, ()> {
+				Self::new(key.to_owned()).ok_or(())
+			}
 		}
 	)
 }
