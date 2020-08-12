@@ -1,4 +1,5 @@
 use thiserror::Error;
+use itertools::izip;
 
 /// Contents of an Etterna ReplayV2 replay file. See [`parse_replay_v2_fast`] for more
 #[derive(Debug, Clone, PartialEq)]
@@ -25,7 +26,7 @@ impl ReplayV2Fast {
 		let mut note_seconds_columns = [vec![], vec![], vec![], vec![]];
 		let mut hit_seconds_columns = [vec![], vec![], vec![], vec![]];
 
-		for (&note_second, note) in note_seconds.iter().zip(notes) {
+		for (note_second, note) in izip!(note_seconds, notes) {
 			if note.column >= 4 { continue }
 
 			let note_second = note_second / rate.as_f32();

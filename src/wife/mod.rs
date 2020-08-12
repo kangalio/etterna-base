@@ -42,3 +42,36 @@ pub fn wife2(deviation: f32, judge: &crate::Judge) -> f32 { Wife2::calc(deviatio
 
 /// Utility function to calculate a Wife3 score for a single hit deviation
 pub fn wife3(deviation: f32, judge: &crate::Judge) -> f32 { Wife3::calc(deviation, judge) }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use itertools::izip;
+
+	#[test]
+	fn test_wife() {
+		const TEST_DEVIATIONS: [f32; 8] = [0.0, 0.03, 0.15, 0.179, 0.18, 0.2, 0.26, 10.0];
+		const TEST_JUDGES: [&crate::Judge; 3] = [crate::J1, crate::J4, crate::J9];
+		const TEST_WIFE_FNS: [fn(f32, &crate::Judge) -> f32; 2] = [wife2, wife3];
+
+		let test_data: &[[[f32; TEST_WIFE_FNS.len()]; TEST_JUDGES.len()]; TEST_DEVIATIONS.len()] = &[
+			[[ 1.00000000,  1.00000000], [ 1.00000000,  1.00000000], [ 1.00000000,  1.00000000]],
+			[[ 0.99542332,  0.99242789], [ 0.97769690,  0.97078007], [-2.38148451, -1.75365114]],
+			[[-0.43687677, -0.93580455], [-2.38148451, -2.03260875], [-4.00000000, -2.75000000]],
+			[[-1.21131277, -1.37423515], [-3.18280602, -2.72608685], [-4.00000000, -2.75000000]],
+			[[-1.23852777, -1.38935339], [-3.20406675, -2.75000000], [-4.00000000, -2.75000000]],
+			[[-1.77302504, -1.69171941], [-3.54750085, -2.75000000], [-4.00000000, -2.75000000]],
+			[[-3.05441713, -2.59881711], [-3.94453931, -2.75000000], [-4.00000000, -2.75000000]],
+			[[-4.00000000, -2.75000000], [-4.00000000, -2.75000000], [-4.00000000, -2.75000000]],
+		];
+
+		for (&deviation, test_data) in izip!(TEST_DEVIATIONS, test_data) {
+			for (&judge, test_data) in izip!(TEST_JUDGES, test_data) {
+				for (&wife_fn, &expected) in izip!(TEST_WIFE_FNS, test_data) {
+					assert!((wife_fn(deviation, judge) - expected).abs() < 0.00000001);
+					assert!((wife_fn(-deviation, judge) - expected).abs() < 0.00000001);
+				}
+			}
+		}
+	}
+}

@@ -46,7 +46,7 @@ impl Judge {
 }
 
 /// Removed from Etterna in 0.69.0
-pub static J1: Judge = Judge {
+pub const J1: &Judge = &Judge {
 	marvelous_window: 0.03375,
 	perfect_window: 0.0675,
 	great_window: 0.135,
@@ -59,7 +59,7 @@ pub static J1: Judge = Judge {
 };
 
 /// Removed from Etterna in 0.69.0
-pub static J2: Judge = Judge {
+pub const J2: &Judge = &Judge {
 	marvelous_window: 0.029925,
 	perfect_window: 0.05985,
 	great_window: 0.1197,
@@ -72,7 +72,7 @@ pub static J2: Judge = Judge {
 };
 
 /// Removed from Etterna in 0.69.0
-pub static J3: Judge = Judge {
+pub const J3: &Judge = &Judge {
 	marvelous_window: 0.0261,
 	perfect_window: 0.0522,
 	great_window: 0.1044,
@@ -85,7 +85,7 @@ pub static J3: Judge = Judge {
 };
 
 /// Default judge for official scoring
-pub static J4: Judge = Judge {
+pub const J4: &Judge = &Judge {
 	marvelous_window: 0.0225,
 	perfect_window: 0.045,
 	great_window: 0.09,
@@ -97,7 +97,7 @@ pub static J4: Judge = Judge {
 	timing_scale: 1.00,
 };
 
-pub static J5: Judge = Judge {
+pub const J5: &Judge = &Judge {
 	marvelous_window: 0.0189,
 	perfect_window: 0.0378,
 	great_window: 0.0756,
@@ -110,7 +110,7 @@ pub static J5: Judge = Judge {
 	mine_window: 0.075,
 };
 
-pub static J6: Judge = Judge {
+pub const J6: &Judge = &Judge {
 	marvelous_window: 0.01485,
 	perfect_window: 0.0297,
 	great_window: 0.0594,
@@ -124,7 +124,7 @@ pub static J6: Judge = Judge {
 };
 
 /// Half the timing window of J4
-pub static J7: Judge = Judge {
+pub const J7: &Judge = &Judge {
 	marvelous_window: 0.01125,
 	perfect_window: 0.0225,
 	great_window: 0.045,
@@ -138,7 +138,7 @@ pub static J7: Judge = Judge {
 };
 
 /// Half the timing window of J6
-pub static J8: Judge = Judge {
+pub const J8: &Judge = &Judge {
 	marvelous_window: 0.007425,
 	perfect_window: 0.01485,
 	great_window: 0.0297,
@@ -152,7 +152,7 @@ pub static J8: Judge = Judge {
 	mine_window: 0.075,
 };
 
-pub static J9: Judge = Judge {
+pub const J9: &Judge = &Judge {
 	marvelous_window: 0.0045,
 	perfect_window: 0.009,
 	great_window: 0.018,

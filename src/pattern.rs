@@ -1,3 +1,5 @@
+use itertools::izip;
+
 /// Returns the width in bytes of the first character in the string
 /// 
 /// Panics if the string is empty
@@ -133,8 +135,7 @@ impl PartialEq for Pattern {
     fn eq(&self, other: &Self) -> bool {
 		if self.rows.len() != other.rows.len() { return false; }
 		
-		self.rows.iter()
-			.zip(other.rows.iter())
+		izip!(self.rows, other.rows)
 			.all(|(row_a, row_b)| crate::util::is_equal_no_order_no_duplicates(row_a, row_b))
     }
 }
