@@ -135,7 +135,7 @@ impl PartialEq for Pattern {
     fn eq(&self, other: &Self) -> bool {
 		if self.rows.len() != other.rows.len() { return false; }
 		
-		izip!(self.rows, other.rows)
+		izip!(&self.rows, &other.rows)
 			.all(|(row_a, row_b)| crate::util::is_equal_no_order_no_duplicates(row_a, row_b))
     }
 }

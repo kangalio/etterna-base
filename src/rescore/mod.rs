@@ -58,3 +58,75 @@ where
 	crate::Wifescore::from_proportion(wifescore)
 		.expect("Invalid wifescore was generated. Maybe the given notes and hits vectors were empty")
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_scoring_systems() {
+		use crate::Wife as _;
+
+		let judge = crate::J4;
+		type Wife = crate::Wife3;
+		let wife = |deviation: f32| Wife::calc(deviation, judge);
+
+		let test = |note_seconds, hit_seconds, target_naive_wifescore: f32, target_matching_wifescore: f32| {
+			let naive_wifescore = {
+				let result = NaiveScorer::evaluate::<Wife>(note_seconds, hit_seconds, judge);
+				result.wifescore_sum / result.num_judged_notes as f32
+			};
+			let matching_wifescore = {
+				let result = MatchingScorer::evaluate::<Wife>(note_seconds, hit_seconds, judge);
+				result.wifescore_sum / result.num_judged_notes as f32
+			};
+			
+			println!("{} == {} ?", naive_wifescore, target_naive_wifescore);
+			println!("{} == {} ?", matching_wifescore, target_matching_wifescore);
+			assert!((naive_wifescore - target_naive_wifescore).abs() < 0.00001);
+			assert!((matching_wifescore - target_matching_wifescore).abs() < 0.00001);
+		};
+
+		test(
+			&[1.0, 2.0, 3.0, 4.0],
+			&[1.0, 2.0, 3.0, 4.0],
+			wife(0.0),
+			wife(0.0),
+		);
+
+		test(
+			&[1.0, 2.0, 3.0, 4.0],
+			&[0.9,      3.1, 4.1],
+			(wife(0.1) + wife(1.0) + wife(0.1) + wife(0.1)) / 4.0,
+			(wife(0.1) + wife(1.0) + wife(0.1) + wife(0.1)) / 4.0,
+		);
+
+		test(
+			&[0.10, 0.20, 0.30, 0.40],
+			&[0.09, 0.10, 0.30, 0.40],
+			(wife(0.01) + wife(0.10) + wife(0.0) + wife(0.0)) / 4.0,
+			(wife(0.0) + wife(0.11) + wife(0.0) + wife(0.0)) / 4.0,
+		);
+
+		test(
+			&[0.05, 0.10, 0.15, 0.20],
+			&[0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20],
+			(wife(0.04) + wife(0.08) + wife(0.12) + wife(0.16)) / 4.0,
+			(wife(0.0) * 4.0 /* latter four hits */ + wife(1.0) * 4.0 /* first four stray hit punishment */) / 8.0
+		);
+
+		test(
+			&[0.05, 0.10, 0.15, 0.20],
+			&[0.01, 0.02, 0.03, 0.04],
+			(wife(0.04) + wife(0.08) + wife(0.12) + wife(0.16)) / 4.0,
+			(wife(0.01) + wife(0.07) + wife(0.13) + wife(1.0) /* miss */ + wife(1.0) /* stray tap */) / 5.0,
+		);
+
+		test(
+			&[0.05, 0.10, 0.15, 0.20],
+			&[],
+			wife(1.0),
+			wife(1.0),
+		);
+	}
+}

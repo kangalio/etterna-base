@@ -65,9 +65,9 @@ mod tests {
 			[[-4.00000000, -2.75000000], [-4.00000000, -2.75000000], [-4.00000000, -2.75000000]],
 		];
 
-		for (&deviation, test_data) in izip!(TEST_DEVIATIONS, test_data) {
-			for (&judge, test_data) in izip!(TEST_JUDGES, test_data) {
-				for (&wife_fn, &expected) in izip!(TEST_WIFE_FNS, test_data) {
+		for (&deviation, test_data) in izip!(&TEST_DEVIATIONS, test_data) {
+			for (&judge, test_data) in izip!(&TEST_JUDGES, test_data) {
+				for (&wife_fn, &expected) in izip!(&TEST_WIFE_FNS, test_data) {
 					assert!((wife_fn(deviation, judge) - expected).abs() < 0.00000001);
 					assert!((wife_fn(-deviation, judge) - expected).abs() < 0.00000001);
 				}
