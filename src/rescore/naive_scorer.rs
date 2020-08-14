@@ -59,7 +59,7 @@ impl ScoringSystem for NaiveScorer {
 			if DEBUG_JUDGEMENT_BUG { print!("{:.5}, ", best_note_deviation_no_abs); }
 
 			best_note.is_claimed = true;
-			wifescore_sum += W::calc(best_note_deviation, judge);
+			wifescore_sum += W::calc_deviation(best_note_deviation, judge);
 		}
 		if DEBUG_JUDGEMENT_BUG { println!(); }
 

@@ -53,7 +53,7 @@ impl TimingInfo {
 
 	/// Input slice must be sorted!
 	pub fn ticks_to_seconds(&self, ticks: &[u32]) -> Vec<f32> {
-		assert!(crate::util::is_sorted(ticks)); // Parameter validation
+		assert!(crate::util::is_sorted(ticks));
 		
 		let mut cursor_beat: f64 = 0.0;
 		let mut cursor_second: f64 = 0.0;

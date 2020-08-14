@@ -19,6 +19,9 @@ pub fn find_fastest_note_subset(
 	min_num_notes: u32,
 	max_num_notes: u32, // inclusive
 ) -> FastestComboInfo {
+	assert!(crate::util::is_sorted(seconds));
+	assert!(max_num_notes >= min_num_notes);
+
 	let mut fastest = FastestComboInfo {
 		start_second: 0.0, end_second: 0.0, length: 0, // dummy values
 		speed: 0.0,
@@ -67,6 +70,8 @@ pub fn find_fastest_note_subset_wife_pts(
 	wife_pts: &[f32],
 ) -> FastestComboInfo {
 	assert!(wife_pts.len() == seconds.len());
+	assert!(crate::util::is_sorted(seconds));
+	assert!(max_num_notes >= min_num_notes);
 	
 	let mut fastest = FastestComboInfo {
 		start_second: 0.0, end_second: 0.0, length: 0, // dummy values
@@ -130,7 +135,8 @@ pub fn find_fastest_combo_in_score<I, T>(
 	wife_pts: Option<&[f32]>,
 	rate: f32,
 ) -> FastestComboInfo {
-	//~ assert_eq!(seconds.len(), are_cbs.len());
+	assert!(crate::util::is_sorted(seconds));
+	assert!(max_num_notes >= min_num_notes);
 	if let Some(wife_pts) = wife_pts {
 		assert_eq!(seconds.len(), wife_pts.len());
 	}

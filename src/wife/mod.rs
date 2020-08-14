@@ -14,34 +14,45 @@ pub trait Wife {
 	const MISS_WEIGHT: f32;
 
 	/// Calculate a wifescore by the note deviation, which can be positive or negative
-	fn calc(deviation: f32, judge: &crate::Judge) -> f32;
+	fn calc_deviation(deviation: f32, judge: &crate::Judge) -> f32;
 
-	/// Shorthand function to apply this wifescore algorithm to a list of deviations, mine hits and
+	/// Calculate the wifescore for a note hit
+	fn calc(hit: crate::Hit, judge: &crate::Judge) -> f32 {
+		match hit {
+			crate::Hit::Hit { deviation } => Self::calc_deviation(deviation, judge),
+			crate::Hit::Miss => Self::MISS_WEIGHT,
+		}
+	}
+
+	/// Utility function to apply this wifescore algorithm to a list of note hits, mine hits and
 	/// hold drops.
-	/// 
-	/// Misses must be present in the `deviations` slice in form of a `1.000000` value
-	fn apply(deviations: &[f32], num_mine_hits: u64, num_hold_drops: u64, judge: &crate::Judge) -> f32 {
+	fn apply(
+		note_hits: &[crate::Hit],
+		num_mine_hits: u32,
+		num_hold_drops: u32,
+		judge: &crate::Judge
+	) -> f32 {
 		let mut wifescore_sum = 0.0;
-		for &deviation in deviations {
-			if judge.is_miss(deviation) {
-				wifescore_sum += Self::MISS_WEIGHT;
-			} else {
-				wifescore_sum += Self::calc(deviation, judge);
-			}
+		for &hit in note_hits {
+			wifescore_sum += Self::calc(hit, judge);
 		}
 
 		wifescore_sum += num_mine_hits as f32 * Self::MINE_HIT_WEIGHT;
 		wifescore_sum += num_hold_drops as f32 * Self::HOLD_DROP_WEIGHT;
 
-		wifescore_sum / deviations.len() as f32
+		wifescore_sum / note_hits.len() as f32
 	}
 }
 
 /// Utility function to calculate a Wife2 score for a single hit deviation
-pub fn wife2(deviation: f32, judge: &crate::Judge) -> f32 { Wife2::calc(deviation, judge) }
+pub fn wife2(hit: impl Into<crate::Hit>, judge: &crate::Judge) -> f32 {
+	Wife2::calc(hit.into(), judge)
+}
 
 /// Utility function to calculate a Wife3 score for a single hit deviation
-pub fn wife3(deviation: f32, judge: &crate::Judge) -> f32 { Wife3::calc(deviation, judge) }
+pub fn wife3(hit: impl Into<crate::Hit>, judge: &crate::Judge) -> f32 {
+	Wife3::calc(hit.into(), judge)
+}
 
 #[cfg(test)]
 mod tests {

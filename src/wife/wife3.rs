@@ -76,7 +76,7 @@ impl Wife for Wife3 {
 	const HOLD_DROP_WEIGHT: f32 = Self::INNER_HOLD_DROP_WEIGHT / 2.0;
 	const MISS_WEIGHT: f32 = Self::INNER_MISS_WEIGHT / 2.0;
 
-	fn calc(deviation: f32, judge: &crate::Judge) -> f32 {
+	fn calc_deviation(deviation: f32, judge: &crate::Judge) -> f32 {
 		Self::calc_inner(deviation, judge) / 2.0 // Divide by two to revert the max=2 scaling
 	}
 }

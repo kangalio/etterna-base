@@ -132,7 +132,7 @@ unsafe fn column_rescore<W: crate::Wife>(
 	// These are only the matched notes/hits! Still need to punish for misses and strays
 	let mut wifescore_sum: f32 = notes.iter()
 		.filter_map(|note| note.assigned_hit.as_ref()) // only notes with assigned hits (i.e. notes that were hit)
-		.map(|assigned_hit| W::calc(assigned_hit.deviation, judge))
+		.map(|assigned_hit| W::calc_deviation(assigned_hit.deviation, judge))
 		.inspect(|_| num_matched_hits += 1)
 		.sum();
 	

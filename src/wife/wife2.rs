@@ -12,7 +12,7 @@ impl Wife for Wife2 {
 	const HOLD_DROP_WEIGHT: f32 = INNER_HOLD_DROP_WEIGHT / 2.0;
 	const MINE_HIT_WEIGHT: f32 = INNER_MINE_HIT_WEIGHT / 2.0;
 
-	fn calc(deviation: f32, judge: &crate::Judge) -> f32 {
+	fn calc_deviation(deviation: f32, judge: &crate::Judge) -> f32 {
 		let maxms = (deviation * 1000.0).abs();
 		let avedeviation = 95.0 * judge.timing_scale;
 		let y: f32 = 1.0 - 2.0f32.powf(-maxms * maxms / (avedeviation * avedeviation));

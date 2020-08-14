@@ -25,9 +25,9 @@ pub enum Difficulty {
 impl Difficulty {
 	/// Parses a short difficulty string as found on the Etterna evaluation screen: BG, IN...
 	///
-	/// The string must be given in uppercase letters
+	/// This function is case insensitive
 	pub fn from_short_string(string: &str) -> Option<Self> {
-		match string {
+		match string.to_ascii_uppercase().as_str() {
 			"BG" => Some(Self::Beginner),
 			"EZ" => Some(Self::Easy),
 			"NM" => Some(Self::Medium),
@@ -41,15 +41,15 @@ impl Difficulty {
 	/// Parse a long difficulty string. Some difficulties has multiple spellings; for example
 	/// "Challenge", "Expert" and "Insane".
 	/// 
-	/// Strings must be given with first letter uppercase and the rest lowercase
+	/// This function is case insensitive
 	pub fn from_long_string(string: &str) -> Option<Self> {
-		match string {
-			"Beginner" | "Novice" => Some(Self::Beginner),
-			"Easy" => Some(Self::Easy),
-			"Medium" | "Normal" => Some(Self::Medium),
-			"Hard" => Some(Self::Hard),
-			"Challenge" | "Expert" | "Insane" => Some(Self::Challenge),
-			"Edit" => Some(Self::Edit),
+		match string.to_ascii_lowercase().as_str() {
+			"beginner" | "novice" => Some(Self::Beginner),
+			"easy" => Some(Self::Easy),
+			"medium" | "normal" => Some(Self::Medium),
+			"hard" => Some(Self::Hard),
+			"challenge" | "expert" | "insane" => Some(Self::Challenge),
+			"edit" => Some(Self::Edit),
 			_ => None,
 		}
 	}
@@ -319,6 +319,19 @@ pub enum TapJudgement {
 	Miss,
 }
 
+impl TapJudgement {
+	pub fn color(self) -> (u8, u8, u8) {
+		match self {
+			Self::Marvelous => (0x99, 0xCC, 0xFF),
+			Self::Perfect => (0xF2, 0xCB, 0x30),
+			Self::Great => (0x14, 0xCC, 0x8F),
+			Self::Good => (0x1A, 0xB2, 0xFF),
+			Self::Bad => (0xFF, 0x1A, 0xB3),
+			Self::Miss => (0xCC, 0x29, 0x29),
+		}
+	}
+}
+
 /// Represents a player hit of a single note
 /// 
 /// The deviation value is in seconds and may be negative
@@ -341,6 +354,15 @@ impl Hit {
 		match *self {
 			Self::Hit { deviation } => judge.classify(deviation),
 			Self::Miss => TapJudgement::Miss,
+		}
+	}
+
+	pub fn is_within_window(&self, window: f32) -> bool {
+		assert!(window >= 0.0);
+
+		match *self {
+			Self::Hit { deviation } => deviation.abs() < window,
+			Self::Miss => false,
 		}
 	}
 
@@ -386,18 +408,41 @@ impl Hit {
 		}
 	}
 
-	/// Whether this hit is considered a miss
+	/// Whether this hit is considered a miss. Note the distinction to [`Self::was_missed`]! This
+	/// can return true even if the user _did_ hit the note: A deviation of 200ms is a late bad on
+	/// J1 but a "miss" on J4.
+	/// 
+	/// If you want to check whether the note was truly **missed**, use `if hit == Hit::Miss` or
+	/// `if let Hit::Miss = hit` instead.
 	/// 
 	/// ```rust
 	/// # use etterna_base::{Hit, J1, J4};
-	/// assert!(Hit::Hit { deviation: -0.02 }.is_miss(J4) == false);
-	/// assert!(Hit::Hit { deviation: 0.20 }.is_miss(J4) == true);
-	/// assert!(Hit::Hit { deviation: 0.20 }.is_miss(J1) == false);
-	/// assert!(Hit::Miss.is_miss(J1) == true);
+	/// assert!(Hit::Hit { deviation: -0.02 }.is_considered_miss(J4) == false);
+	/// assert!(Hit::Miss.is_considered_miss(J4) == true);
+	/// assert!(Hit::Hit { deviation: 0.20 }.is_considered_miss(J1) == false);
+	/// assert!(Hit::Hit { deviation: 0.20 }.is_considered_miss(J4) == true);
 	/// ```
-	pub fn is_miss(&self, judge: &crate::Judge) -> bool {
+	pub fn is_considered_miss(&self, judge: &crate::Judge) -> bool {
 		match *self {
 			Self::Hit { deviation } => judge.is_miss(deviation),
+			Self::Miss => true,
+		}
+	}
+
+	/// Whether the note has not been hit by the player. Note the distincion to
+	/// [`Self::is_considered_miss`]! Even a, say, 250ms late hit from J1 would return `false`
+	/// here.
+	/// 
+	/// ```rust
+	/// # use etterna_base::{Hit, J1, J4};
+	/// assert!(Hit::Hit { deviation: -0.02 }.was_missed(J4) == false);
+	/// assert!(Hit::Miss.was_missed(J4) == true);
+	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed(J1) == false);
+	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed(J4) == false);
+	/// ```
+	pub fn was_missed(&self) -> bool {
+		match *self {
+			Self::Hit { .. } => false,
 			Self::Miss => true,
 		}
 	}
