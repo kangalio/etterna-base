@@ -28,6 +28,8 @@ pub trait ScoringSystem: Sized {
 /// Calculates a wifescore from a list of notes per column and hits per column, plus the mine hits
 /// and hold drops. The wifescore algorithm and scoring algorithm used can be chosen via the generic
 /// parameters.
+/// 
+/// Prefer [`rescore_from_note_hits`] if all you need is a judge conversion.
 pub fn rescore<S, W>(
 	note_seconds_columns: &[Vec<f32>; 4],
 	hit_seconds_columns: &[Vec<f32>; 4],
@@ -57,6 +59,38 @@ where
 	let wifescore = wifescore_sum / num_judged_notes as f32;
 	crate::Wifescore::from_proportion(wifescore)
 		.expect("Invalid wifescore was generated. Maybe the given notes and hits vectors were empty")
+}
+
+/// Calculate a wifescore from a replay's note hits, mine hits and hold drops.
+/// 
+/// This function is less generic
+/// than `rescore` because you can't choose the scoring system - it's already engrained within the
+/// note hits. However, note hits are more easily and reliably obtainable than note seconds and hit
+/// seconds columns. Therefore this function should be preferred if only a simple rescore with a
+/// different judge is required.
+/// 
+/// Returns None if the `note_hits` iterator is empty
+/// 
+/// ```rust,no_run
+/// let replay: etterna_base::ReplayV2Fast = todo!();
+/// 
+/// let wifescore_on_j7 = etterna_base::rescore_from_note_hits::<etterna_base::Wife3, _>(
+/// 	replay.notes.iter().map(|note| note.hit),
+/// 	replay.num_mine_hits,
+/// 	replay.num_hold_drops,
+/// 	etterna_base::J7,
+/// );
+/// ```
+pub fn rescore_from_note_hits<W, I: IntoIterator<Item=crate::Hit>>(
+	note_hits: I,
+	num_mine_hits: u32,
+	num_hold_drops: u32,
+	judge: &crate::Judge,
+) -> Option<crate::Wifescore>
+where
+	W: crate::Wife
+{
+	W::apply(note_hits, num_mine_hits, num_hold_drops, judge)
 }
 
 #[cfg(test)]

@@ -26,21 +26,25 @@ pub trait Wife {
 
 	/// Utility function to apply this wifescore algorithm to a list of note hits, mine hits and
 	/// hold drops.
+	/// 
+	/// Returns None if the `note_hits` iterator is empty
 	fn apply(
-		note_hits: &[crate::Hit],
+		note_hits: impl IntoIterator<Item=crate::Hit>,
 		num_mine_hits: u32,
 		num_hold_drops: u32,
 		judge: &crate::Judge
-	) -> f32 {
+	) -> Option<crate::Wifescore> {
+		let mut num_note_hits = 0;
 		let mut wifescore_sum = 0.0;
-		for &hit in note_hits {
+		for hit in note_hits {
 			wifescore_sum += Self::calc(hit, judge);
+			num_note_hits += 1;
 		}
 
 		wifescore_sum += num_mine_hits as f32 * Self::MINE_HIT_WEIGHT;
 		wifescore_sum += num_hold_drops as f32 * Self::HOLD_DROP_WEIGHT;
 
-		wifescore_sum / note_hits.len() as f32
+		crate::Wifescore::from_proportion(wifescore_sum / num_note_hits as f32)
 	}
 }
 

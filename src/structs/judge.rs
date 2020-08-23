@@ -4,6 +4,7 @@
 /// [this spreadsheet](https://docs.google.com/spreadsheets/d/1syi5aN6sTiDA2Bs_lzZjsLQ1yCEhxl5EnAd6EsD6cF4)
 /// from Foxfire and poco0317
 pub struct Judge {
+	pub name: &'static str,
 	pub marvelous_window: f32,
 	pub perfect_window: f32,
 	pub great_window: f32,
@@ -77,6 +78,7 @@ impl Judge {
 
 /// Removed from Etterna in 0.69.0
 pub const J1: &Judge = &Judge {
+	name: "J1",
 	marvelous_window: 0.03375,
 	perfect_window: 0.0675,
 	great_window: 0.135,
@@ -90,6 +92,7 @@ pub const J1: &Judge = &Judge {
 
 /// Removed from Etterna in 0.69.0
 pub const J2: &Judge = &Judge {
+	name: "J2",
 	marvelous_window: 0.029925,
 	perfect_window: 0.05985,
 	great_window: 0.1197,
@@ -103,6 +106,7 @@ pub const J2: &Judge = &Judge {
 
 /// Removed from Etterna in 0.69.0
 pub const J3: &Judge = &Judge {
+	name: "J3",
 	marvelous_window: 0.0261,
 	perfect_window: 0.0522,
 	great_window: 0.1044,
@@ -116,6 +120,7 @@ pub const J3: &Judge = &Judge {
 
 /// Default judge for official scoring
 pub const J4: &Judge = &Judge {
+	name: "J4",
 	marvelous_window: 0.0225,
 	perfect_window: 0.045,
 	great_window: 0.09,
@@ -128,6 +133,7 @@ pub const J4: &Judge = &Judge {
 };
 
 pub const J5: &Judge = &Judge {
+	name: "J5",
 	marvelous_window: 0.0189,
 	perfect_window: 0.0378,
 	great_window: 0.0756,
@@ -141,6 +147,7 @@ pub const J5: &Judge = &Judge {
 };
 
 pub const J6: &Judge = &Judge {
+	name: "J6",
 	marvelous_window: 0.01485,
 	perfect_window: 0.0297,
 	great_window: 0.0594,
@@ -155,6 +162,7 @@ pub const J6: &Judge = &Judge {
 
 /// Half the timing window of J4
 pub const J7: &Judge = &Judge {
+	name: "J7",
 	marvelous_window: 0.01125,
 	perfect_window: 0.0225,
 	great_window: 0.045,
@@ -169,6 +177,7 @@ pub const J7: &Judge = &Judge {
 
 /// Half the timing window of J6
 pub const J8: &Judge = &Judge {
+	name: "J8",
 	marvelous_window: 0.007425,
 	perfect_window: 0.01485,
 	great_window: 0.0297,
@@ -183,6 +192,7 @@ pub const J8: &Judge = &Judge {
 };
 
 pub const J9: &Judge = &Judge {
+	name: "J9",
 	marvelous_window: 0.0045,
 	perfect_window: 0.009,
 	great_window: 0.018,
