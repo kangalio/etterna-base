@@ -447,3 +447,120 @@ impl Hit {
 		}
 	}
 }
+
+#[derive(Copy, Clone, PartialEq, Eq, Default, Hash)]
+pub struct NoteRow {
+	// least significant bit is leftmost finger
+	bits: u32,
+	// needed to differentiate between 0b0011 and 0b11
+	width: u32,
+}
+
+impl NoteRow {
+	/// Instantiates from a bitset stored in an integer, where the least significant bit corresponds
+	/// to the leftmost lane.
+	/// 
+	/// The `width` parameter specifies the "game mode" of this note row, for example `4` for 4k and
+	/// `6` for 6k. This is to differentiate a `   xxx` 6k note row from a ` xxx` 4k note row.
+	pub fn from_bits(bits: u32, width: u32) -> Self {
+		Self { bits, width }
+	}
+
+	/// Returns the notes as a bitset, where the least significant bit corresponds to the leftmost
+	/// lane
+	pub fn bits(self) -> u32 {
+		self.bits
+	}
+
+	/// Get the width/game mode of this note row, for example `4` for 4k. See also the docs for
+	/// `Self::from_bits`
+	pub fn width(self) -> u32 {
+		self.width
+	}
+
+	/// Returns whether there is a tap at the given index, where 0 is the leftmost lane.
+	pub fn tap_at(self, index: u32) -> bool {
+		(self.bits & (1 << index)) > 0
+	}
+}
+
+/*impl NoteRow {
+	fn bit_width(self) -> u32 {
+		std::mem::size_of_val(self.bits) * 8
+	}
+
+	pub fn new() -> Self {
+
+	}
+
+	/// Instantiates from a bitset stored in an integer, where the least significant bit corresponds
+	/// to the leftmost lane
+	/// 
+	/// ```rust
+	/// # use crate::NoteRow;
+	/// assert_eq!(&NoteRow::from_bits_lsb_left(0b1110).format('x'), " xxx");
+	/// ```
+	pub fn from_bits_lsb_left(bits: u32) -> Self {
+		Self { bits }
+	}
+
+	/// Instantiates from a bitset stored in an integer, where the least significant bit corresponds
+	/// to the rightmost lane
+	/// 
+	/// ```rust
+	/// # use crate::NoteRow;
+	/// assert_eq!(&NoteRow::from_bits_lsb_right(0b1110).format('x'), "xxx ");
+	/// assert_ne!(&NoteRow::from_bits_lsb_right(0b0111).format('x'), "xxx"); // be careful!
+	/// ```
+	pub fn from_bits_lsb_right(bits: u32) -> Self {
+		Self { bits }.mirror()
+	}
+
+	/// Returns a bit representation of this note row where the least significant bit corresponds
+	/// to the leftmost lane
+	pub fn bits_lsb_left(self) -> u32 {
+		self.bits
+	}
+
+	/// Returns a bit representation of this note row where the least significant bit corresponds
+	/// to the rightmost lane
+	pub fn bits_lsb_right(self) -> u32 {
+		self.mirror().bits
+	}
+
+	/// Returns the number of notes in this row
+	pub fn num_notes(self) -> u32 {
+		self.bits.count_ones()
+	}
+
+	/// Returns the number of notes that this row spans
+	/// 
+	/// ```rust
+	/// # use crate::NoteRow;
+	/// assert_eq!(NoteRow::from_bits_lsb_right(0b10101).width(), 5);
+	/// assert_eq!(NoteRow::from_bits_lsb_right(0b0011).width(), 2); // be careful!
+	/// ```
+	pub fn width(self) -> u32 {
+		self.bit_width() - self.bits.leading_zeros()
+	}
+
+	/// Mirror the notes, so that any notes on the left end up on the right and vice-versa
+	/// 
+	/// ```rust
+	/// # use crate::NoteRow;
+	/// assert_eq!(NoteRow::from_lsb_right(0b110).mirror(), NoteRow::from_lsb_right(0b011));
+	/// assert_eq!(NoteRow::from_lsb_right(0b11001).mirror(), NoteRow::from_lsb_right(0b10011));
+	/// ```
+	pub fn mirror(self) -> Self {
+		Self { bits: self.bits.reverse_bits() >> self.bits.leading_zeros() }
+	}
+}*/
+
+impl std::fmt::Debug for NoteRow {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		for i in 0..self.width() {
+			write!(f, "{}", if self.tap_at(i) { "x" } else { " " })?;
+		}
+		Ok(())
+	}
+}

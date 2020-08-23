@@ -83,6 +83,35 @@ impl ChartSkillsets {
 			.max(self.chordjack)
 			.max(self.technical)
 	}
+
+	/// Generate a new instance by calling the provided closure with all seven skillsets
+	/// 
+	/// ```rust
+	/// # use etterna_base::ChartSkillsets;
+	/// let mut x = 0.0;
+	/// let lol = ChartSkillsets::from_fn(|_ss| { x += 1.0; x });
+	/// 
+	/// assert_eq!(lol, ChartSkillsets {
+	/// 	stream: 1.0,
+	/// 	jumpstream: 2.0,
+	/// 	handstream: 3.0,
+	/// 	stamina: 4.0,
+	/// 	jackspeed: 5.0,
+	/// 	chordjack: 6.0,
+	/// 	technical: 7.0,
+	/// });
+	/// ```
+	pub fn from_fn(mut f: impl FnMut(Skillset7) -> f32) -> Self {
+		Self {
+			stream: f(Skillset7::Stream),
+			jumpstream: f(Skillset7::Jumpstream),
+			handstream: f(Skillset7::Handstream),
+			stamina: f(Skillset7::Stamina),
+			jackspeed: f(Skillset7::Jackspeed),
+			chordjack: f(Skillset7::Chordjack),
+			technical: f(Skillset7::Technical),
+		}
+	}
 }
 
 /// Skillset information. Used for player ratings

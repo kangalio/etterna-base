@@ -76,8 +76,6 @@ pub fn calculate_player_skillset_rating(ssrs: &[f32]) -> f32 {
 
 /// This is the pre-0.70 variant of [`calculate_player_skillset_rating`].
 pub fn calculate_player_skillset_rating_pre_070(ssrs: &[f32]) -> f32 {
-	// not sure if these params are correct; I didn't test them because I don't wannt spend the
-	// time and effort to find the old C++ implementation to compare
 	calc_rating(ssrs, 1.04, 0.1)
 }
 

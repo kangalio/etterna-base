@@ -51,6 +51,17 @@ impl Rate {
 	pub fn as_f32(self) -> f32 {
 		self.x20 as f32 / 20.0
 	}
+
+	/// Returns this rate multiplied by 20. This will always result in a whole number, hence this
+	/// function returns an integer.
+	/// 
+	/// ```rust
+	/// # use etterna_base::structs::Rate;
+	/// assert_eq!(Rate::from_string("1.45").unwrap().as_x20(), 29);
+	/// ```
+	pub fn as_x20(self) -> u32 {
+		self.x20
+	}
 }
 
 impl std::fmt::Display for Rate {
