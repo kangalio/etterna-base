@@ -1,3 +1,5 @@
+#![allow(clippy::len_zero, clippy::tabs_in_doc_comments, clippy::collapsible_if, clippy::needless_bool)]
+
 pub mod structs;
 pub use structs::*;
 

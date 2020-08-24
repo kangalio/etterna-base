@@ -48,7 +48,7 @@ impl TimingInfo {
 		let first_bpm = changes[0].bpm;
 		changes.remove(0); // remove first entry (0.0=xxx)
 		
-		return Ok(TimingInfo { changes, first_bpm });
+		Ok(TimingInfo { changes, first_bpm })
 	}
 
 	/// Input slice must be sorted!
@@ -85,6 +85,6 @@ impl TimingInfo {
 		
 		assert!(ticks.len() == seconds_vec.len()); // If this panics, the above code is wrong
 		
-		return seconds_vec;
+		seconds_vec
 	}
 }
