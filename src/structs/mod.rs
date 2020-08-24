@@ -564,3 +564,11 @@ impl std::fmt::Debug for NoteRow {
 		Ok(())
 	}
 }
+
+/// No guaranteess of any sorts about ordering or contents in general
+#[derive(Debug, PartialEq, Clone, Default)]
+#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
+pub struct NoteAndHitSeconds {
+	pub note_seconds: Vec<f32>,
+	pub hit_seconds: Vec<f32>,
+}

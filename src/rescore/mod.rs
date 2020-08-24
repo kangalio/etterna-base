@@ -1,5 +1,3 @@
-use itertools::izip;
-
 mod matching_scorer;
 pub use matching_scorer::MatchingScorer;
 
@@ -19,8 +17,7 @@ pub trait ScoringSystem: Sized {
 	/// Evaluate the scoring system on the given list of notes and hits. The lists must be sorted
 	/// by the hits!
 	fn evaluate<W: crate::Wife>(
-		note_seconds: &[f32],
-		hit_seconds: &[f32],
+		lane: &crate::NoteAndHitSeconds,
 		judge: &crate::Judge,
 	) -> ScoringResult;
 }
@@ -31,8 +28,7 @@ pub trait ScoringSystem: Sized {
 /// 
 /// Prefer [`rescore_from_note_hits`] if all you need is a judge conversion.
 pub fn rescore<S, W>(
-	note_seconds_columns: &[Vec<f32>; 4],
-	hit_seconds_columns: &[Vec<f32>; 4],
+	lanes: &[crate::NoteAndHitSeconds; 4],
 	num_mine_hits: u32,
 	num_hold_drops: u32,
 	judge: &crate::Judge,
@@ -43,11 +39,11 @@ where
 {
 	let mut wifescore_sum = 0.0;
 	let mut num_judged_notes = 0;
-	for (note_seconds, hit_seconds) in izip!(note_seconds_columns, hit_seconds_columns) {
-		assert!(crate::util::is_sorted(hit_seconds));
-		assert!(crate::util::is_sorted(note_seconds));
+	for lane in lanes {
+		assert!(crate::util::is_sorted(&lane.hit_seconds));
+		assert!(crate::util::is_sorted(&lane.note_seconds));
 
-		let column_scoring_result = S::evaluate::<W>(&note_seconds, &hit_seconds, judge);
+		let column_scoring_result = S::evaluate::<W>(lane, judge);
 
 		wifescore_sum += column_scoring_result.wifescore_sum;
 		num_judged_notes += column_scoring_result.num_judged_notes;

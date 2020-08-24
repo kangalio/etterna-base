@@ -155,10 +155,11 @@ pub struct MatchingScorer;
 
 impl ScoringSystem for MatchingScorer {
 	fn evaluate<W: crate::Wife>(
-		note_seconds: &[f32],
-		hit_seconds: &[f32],
+		lane: &crate::NoteAndHitSeconds,
 		judge: &crate::Judge,
 	) -> ScoringResult {
+		let crate::NoteAndHitSeconds { note_seconds, hit_seconds } = lane;
+
 		assert!(crate::util::is_sorted(hit_seconds));
 
 		let notes: Vec<Note> = note_seconds.iter()
