@@ -1,20 +1,3 @@
-//! A collection of common Etterna structs and related functions
-
-mod skillsets;
-pub use skillsets::*;
-
-mod file_size;
-pub use file_size::*;
-
-mod rate;
-pub use rate::*;
-
-mod timing_info;
-pub use timing_info::*;
-
-mod judge;
-pub use judge::*;
-
 /// Chart difficulty enum
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

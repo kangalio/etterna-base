@@ -1,8 +1,5 @@
 #![allow(clippy::len_zero, clippy::tabs_in_doc_comments, clippy::collapsible_if, clippy::needless_bool)]
 
-pub mod structs;
-pub use structs::*;
-
 mod wife;
 pub use wife::*;
 
@@ -18,8 +15,29 @@ pub use note_subsets::*;
 mod savegame;
 pub use savegame::*;
 
+// Should honestly be removed from here. It's too application-specific
 mod pattern;
 pub use pattern::*;
+
+mod structs;
+pub use structs::*;
+
+mod skillsets;
+pub use skillsets::*;
+
+mod rate;
+pub use rate::*;
+
+mod timing_info;
+pub use timing_info::*;
+
+mod judge;
+pub use judge::*;
+
+pub mod prelude {
+	pub use crate::{Rate, Wifescore, ChartSkillsets, UserSkillsets, Skillset7, Skillset8};
+	pub use crate::structs::*;
+}
 
 mod util;
 
@@ -35,17 +53,17 @@ use rayon::iter::ParallelIterator;
 macro_rules! impl_get_skillset {
 	($return_type:ty, $self_:ident, $overall_getter:expr) => {
 		/// Get a specific skillset value
-		pub fn get(&self, skillset: impl Into<Skillset8>) -> $return_type {
+		pub fn get(&self, skillset: impl Into<crate::Skillset8>) -> $return_type {
 			let $self_ = self;
 			match skillset.into() {
-				Skillset8::Overall => $overall_getter,
-				Skillset8::Stream => self.stream,
-				Skillset8::Jumpstream => self.jumpstream,
-				Skillset8::Handstream => self.handstream,
-				Skillset8::Stamina => self.stamina,
-				Skillset8::Jackspeed => self.jackspeed,
-				Skillset8::Chordjack => self.chordjack,
-				Skillset8::Technical => self.technical,
+				crate::Skillset8::Overall => $overall_getter,
+				crate::Skillset8::Stream => self.stream,
+				crate::Skillset8::Jumpstream => self.jumpstream,
+				crate::Skillset8::Handstream => self.handstream,
+				crate::Skillset8::Stamina => self.stamina,
+				crate::Skillset8::Jackspeed => self.jackspeed,
+				crate::Skillset8::Chordjack => self.chordjack,
+				crate::Skillset8::Technical => self.technical,
 			}
 		}
 	};
@@ -54,17 +72,17 @@ macro_rules! impl_get_skillset {
 
 		/// Get a specific skillset value. If Overall was requested, use the pre-0.70 algorithm
 		/// for calculation.
-		pub fn get_pre_070(&self, skillset: impl Into<Skillset8>) -> $return_type {
+		pub fn get_pre_070(&self, skillset: impl Into<crate::Skillset8>) -> $return_type {
 			let $self_ = self;
 			match skillset.into() {
-				Skillset8::Overall => $overall_getter_pre_070,
-				Skillset8::Stream => self.stream,
-				Skillset8::Jumpstream => self.jumpstream,
-				Skillset8::Handstream => self.handstream,
-				Skillset8::Stamina => self.stamina,
-				Skillset8::Jackspeed => self.jackspeed,
-				Skillset8::Chordjack => self.chordjack,
-				Skillset8::Technical => self.technical,
+				crate::Skillset8::Overall => $overall_getter_pre_070,
+				crate::Skillset8::Stream => self.stream,
+				crate::Skillset8::Jumpstream => self.jumpstream,
+				crate::Skillset8::Handstream => self.handstream,
+				crate::Skillset8::Stamina => self.stamina,
+				crate::Skillset8::Jackspeed => self.jackspeed,
+				crate::Skillset8::Chordjack => self.chordjack,
+				crate::Skillset8::Technical => self.technical,
 			}
 		}
 	}
