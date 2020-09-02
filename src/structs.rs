@@ -435,18 +435,13 @@ impl Hit {
 pub struct NoteRow {
 	// least significant bit is leftmost finger
 	bits: u32,
-	// needed to differentiate between 0b0011 and 0b11
-	width: u32,
 }
 
 impl NoteRow {
 	/// Instantiates from a bitset stored in an integer, where the least significant bit corresponds
 	/// to the leftmost lane.
-	/// 
-	/// The `width` parameter specifies the "game mode" of this note row, for example `4` for 4k and
-	/// `6` for 6k. This is to differentiate a `   xxx` 6k note row from a ` xxx` 4k note row.
-	pub fn from_bits(bits: u32, width: u32) -> Self {
-		Self { bits, width }
+	pub fn from_bits(bits: u32) -> Self {
+		Self { bits }
 	}
 
 	/// Returns the notes as a bitset, where the least significant bit corresponds to the leftmost
@@ -454,16 +449,22 @@ impl NoteRow {
 	pub fn bits(self) -> u32 {
 		self.bits
 	}
-
-	/// Get the width/game mode of this note row, for example `4` for 4k. See also the docs for
-	/// `Self::from_bits`
-	pub fn width(self) -> u32 {
-		self.width
-	}
-
+	
 	/// Returns whether there is a tap at the given index, where 0 is the leftmost lane.
 	pub fn tap_at(self, index: u32) -> bool {
 		(self.bits & (1 << index)) > 0
+	}
+
+	/// Returns the number of notes that this row spans
+	/// 
+	/// ```rust
+	/// # use crate::NoteRow;
+	/// assert_eq!(NoteRow::from_bits_lsb_right(0b10101).width(), 5);
+	/// assert_eq!(NoteRow::from_bits_lsb_right(0b0011).width(), 2); // be careful!
+	/// ```
+	pub fn width(self) -> u32 {
+		let bit_width = std::mem::size_of_val(&self.bits) as u32 * 8;
+		bit_width - self.bits.leading_zeros()
 	}
 }
 
@@ -516,17 +517,6 @@ impl NoteRow {
 		self.bits.count_ones()
 	}
 
-	/// Returns the number of notes that this row spans
-	/// 
-	/// ```rust
-	/// # use crate::NoteRow;
-	/// assert_eq!(NoteRow::from_bits_lsb_right(0b10101).width(), 5);
-	/// assert_eq!(NoteRow::from_bits_lsb_right(0b0011).width(), 2); // be careful!
-	/// ```
-	pub fn width(self) -> u32 {
-		self.bit_width() - self.bits.leading_zeros()
-	}
-
 	/// Mirror the notes, so that any notes on the left end up on the right and vice-versa
 	/// 
 	/// ```rust
@@ -550,8 +540,15 @@ impl std::fmt::Debug for NoteRow {
 
 /// No guaranteess of any sorts about ordering or contents in general
 #[derive(Debug, PartialEq, Clone, Default)]
-#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NoteAndHitSeconds {
 	pub note_seconds: Vec<f32>,
 	pub hit_seconds: Vec<f32>,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum ScrollDirection {
+	Upscroll,
+	Downscroll,
 }

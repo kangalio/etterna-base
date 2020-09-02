@@ -178,14 +178,13 @@ impl UserSkillsets {
 	/// assert!((overall_rating - 27.5234).abs() < 0.0001);
 	/// ```
 	pub fn overall_pre_070(&self) -> f32 {
-		let sum = self.stream
+		(self.stream
 			+ self.jumpstream
 			+ self.handstream
 			+ self.stamina
 			+ self.jackspeed
 			+ self.chordjack
-			+ self.technical;
-		sum / 7.0
+			+ self.technical) / 7.0
 	}
 }
 
