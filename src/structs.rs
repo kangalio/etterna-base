@@ -289,6 +289,20 @@ pub trait SimpleReplay {
 		}
 		judgements
 	}
+
+	fn mean_deviation(&self) -> f32 {
+		let mut num_deviations = 0;
+		let mut deviations_sum = 0.0;
+		
+		for hit in self.iter_hits() {
+			if let crate::Hit::Hit { deviation } = hit {
+				num_deviations += 1;
+				deviations_sum += deviation;
+			}
+		}
+
+		deviations_sum / num_deviations as f32
+	}
 }
 
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
