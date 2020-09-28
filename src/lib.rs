@@ -15,10 +15,6 @@ pub use note_subsets::*;
 mod savegame;
 pub use savegame::*;
 
-// Should honestly be removed from here. It's too application-specific
-mod pattern;
-pub use pattern::*;
-
 mod structs;
 pub use structs::*;
 
