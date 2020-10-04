@@ -566,3 +566,41 @@ pub enum ScrollDirection {
 	Upscroll,
 	Downscroll,
 }
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum Snap {
+	_4th,
+	_8th,
+	_12th,
+	_16th,
+	_24th,
+	_32th,
+	_48th,
+	_64th,
+	_192th,
+}
+
+impl Snap {
+	pub fn from_row(row: usize) -> Self {
+		if row % (192 / 4) == 0 {
+			Self::_4th
+		} else if row % (192 / 8) == 0 {
+			Self::_8th
+		} else if row % (192 / 12) == 0 {
+			Self::_12th
+		} else if row % (192 / 16) == 0 {
+			Self::_16th
+		} else if row % (192 / 24) == 0 {
+			Self::_24th
+		} else if row % (192 / 32) == 0 {
+			Self::_32th
+		} else if row % (192 / 48) == 0 {
+			Self::_48th
+		} else if row % (192 / 64) == 0 {
+			Self::_64th
+		} else {
+			Self::_192th
+		}
+	}
+}
