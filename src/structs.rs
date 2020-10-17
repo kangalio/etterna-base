@@ -582,7 +582,7 @@ pub enum Snap {
 }
 
 impl Snap {
-	pub fn from_row(row: usize) -> Self {
+	pub fn from_row(row: u32) -> Self {
 		if row % (192 / 4) == 0 {
 			Self::_4th
 		} else if row % (192 / 8) == 0 {
