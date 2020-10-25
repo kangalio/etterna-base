@@ -67,8 +67,9 @@ mod tests {
 	fn test_wife() {
 		const TEST_DEVIATIONS: [f32; 8] = [0.0, 0.03, 0.15, 0.179, 0.18, 0.2, 0.26, 10.0];
 		const TEST_JUDGES: [&crate::Judge; 3] = [crate::J1, crate::J4, crate::J9];
-		const TEST_WIFE_FNS: [fn(f32, &crate::Judge) -> f32; 2] = [wife2, wife3];
+		const TEST_WIFE_FNS: [fn(crate::Hit, &crate::Judge) -> f32; 2] = [wife2, wife3];
 
+		#[allow(clippy::excessive_precision)]
 		let test_data: &[[[f32; TEST_WIFE_FNS.len()]; TEST_JUDGES.len()]; TEST_DEVIATIONS.len()] = &[
 			[[ 1.00000000,  1.00000000], [ 1.00000000,  1.00000000], [ 1.00000000,  1.00000000]],
 			[[ 0.99542332,  0.99242789], [ 0.97769690,  0.97078007], [-2.38148451, -1.75365114]],
@@ -83,8 +84,8 @@ mod tests {
 		for (&deviation, test_data) in izip!(&TEST_DEVIATIONS, test_data) {
 			for (&judge, test_data) in izip!(&TEST_JUDGES, test_data) {
 				for (&wife_fn, &expected) in izip!(&TEST_WIFE_FNS, test_data) {
-					assert!((wife_fn(deviation, judge) - expected).abs() < 0.00000001);
-					assert!((wife_fn(-deviation, judge) - expected).abs() < 0.00000001);
+					assert!((wife_fn(crate::Hit::Hit { deviation }, judge) - expected).abs() < 0.00000001);
+					assert!((wife_fn(crate::Hit::Hit { deviation: -deviation }, judge) - expected).abs() < 0.00000001);
 				}
 			}
 		}

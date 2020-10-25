@@ -45,7 +45,7 @@ impl Rate {
 	/// Returns an f32 representation of this rate.
 	/// 
 	/// ```rust
-	/// # use etterna_base::structs::Rate;
+	/// # use etterna_base::Rate;
 	/// assert_eq!(Rate::from_string("1.40").unwrap().as_f32(), 1.4);
 	/// ```
 	pub fn as_f32(self) -> f32 {
@@ -56,7 +56,7 @@ impl Rate {
 	/// function returns an integer.
 	/// 
 	/// ```rust
-	/// # use etterna_base::structs::Rate;
+	/// # use etterna_base::Rate;
 	/// assert_eq!(Rate::from_string("1.45").unwrap().as_x20(), 29);
 	/// ```
 	pub fn as_x20(self) -> u32 {
@@ -88,11 +88,20 @@ impl From<f32> for Rate {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
+pub struct RateParseError;
+impl std::fmt::Display for RateParseError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "invalid rate")
+	}
+}
+impl std::error::Error for RateParseError {}
+
 impl std::str::FromStr for Rate {
-	type Err = ();
+	type Err = RateParseError;
 	
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_string(s).ok_or(())
+        Self::from_string(s).ok_or(RateParseError)
     }
 }
 

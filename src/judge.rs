@@ -132,6 +132,7 @@ pub const J4: &Judge = &Judge {
 	timing_scale: 1.00,
 };
 
+/// Used by some as their go-to judge
 pub const J5: &Judge = &Judge {
 	name: "J5",
 	marvelous_window: 0.0189,
@@ -146,6 +147,7 @@ pub const J5: &Judge = &Judge {
 	mine_window: 0.075,
 };
 
+/// Sometimes used for accuracy training
 pub const J6: &Judge = &Judge {
 	name: "J6",
 	marvelous_window: 0.01485,
@@ -160,7 +162,7 @@ pub const J6: &Judge = &Judge {
 	mine_window: 0.075,
 };
 
-/// Half the timing window of J4
+/// Half the timing window of J4. Common for accuracy training
 pub const J7: &Judge = &Judge {
 	name: "J7",
 	marvelous_window: 0.01125,
@@ -191,6 +193,7 @@ pub const J8: &Judge = &Judge {
 	mine_window: 0.075,
 };
 
+/// Also called "Justice". Originally added to the game as a joke
 pub const J9: &Judge = &Judge {
 	name: "J9",
 	marvelous_window: 0.0045,

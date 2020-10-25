@@ -50,6 +50,23 @@ impl Difficulty {
 	}
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
+pub struct DifficultyParseError;
+impl std::fmt::Display for DifficultyParseError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "invalid difficulty")
+	}
+}
+impl std::error::Error for DifficultyParseError {}
+
+impl std::str::FromStr for Difficulty {
+	type Err = DifficultyParseError;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::from_long_string(s).ok_or(DifficultyParseError)
+	}
+}
+
 /// Judgement data, including mines and holds
 #[derive(Debug, Eq, PartialEq, Clone, Default, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -162,6 +179,7 @@ impl std::fmt::Display for Wifescore {
     }
 }
 
+#[allow(clippy::derive_ord_xor_partial_ord)] // the reasoning doesn't apply here
 impl Ord for Wifescore {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
 		other.partial_cmp(other).expect("Can't happen; this wrapper guarantees non-NaN")
@@ -432,10 +450,10 @@ impl Hit {
 	/// 
 	/// ```rust
 	/// # use etterna_base::{Hit, J1, J4};
-	/// assert!(Hit::Hit { deviation: -0.02 }.was_missed(J4) == false);
-	/// assert!(Hit::Miss.was_missed(J4) == true);
-	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed(J1) == false);
-	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed(J4) == false);
+	/// assert!(Hit::Hit { deviation: -0.02 }.was_missed() == false);
+	/// assert!(Hit::Miss.was_missed() == true);
+	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed() == false);
+	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed() == false);
 	/// ```
 	pub fn was_missed(&self) -> bool {
 		match *self {
@@ -472,9 +490,9 @@ impl NoteRow {
 	/// Returns the number of notes that this row spans
 	/// 
 	/// ```rust
-	/// # use crate::NoteRow;
-	/// assert_eq!(NoteRow::from_bits_lsb_right(0b10101).width(), 5);
-	/// assert_eq!(NoteRow::from_bits_lsb_right(0b0011).width(), 2); // be careful!
+	/// # use etterna_base::NoteRow;
+	/// assert_eq!(NoteRow::from_bits(0b10101).width(), 5);
+	/// assert_eq!(NoteRow::from_bits(0b0011).width(), 2); // be careful!
 	/// ```
 	pub fn width(self) -> u32 {
 		let bit_width = std::mem::size_of_val(&self.bits) as u32 * 8;

@@ -203,8 +203,10 @@ mod tests {
 					min_num_notes, max_num_notes,
 					&vec![1.0; seconds.len()]);
 			
-			assert_eq!(fastest_subset.start_second, fastest_wife_pts_subset.start_second);
-			assert_eq!(fastest_subset.end_second, fastest_wife_pts_subset.end_second);
+			assert_float_eq!(fastest_subset.start_second, fastest_wife_pts_subset.start_second;
+					epsilon=0.00001);
+			assert_float_eq!(fastest_subset.end_second, fastest_wife_pts_subset.end_second;
+					epsilon=0.00001);
 			assert_eq!(fastest_subset.length, fastest_wife_pts_subset.length);
 			assert_float_eq!(fastest_subset.speed, fastest_wife_pts_subset.speed;
 					epsilon=0.00001);
@@ -216,7 +218,7 @@ mod tests {
 		
 		let seconds: &[f32] = &[0.0, 3.0, 5.0, 6.0, 8.0];
 		test_the_functions(seconds, 2, 99,
-				2, 0.66666666666); // should detect [3, 5, 6)
+				2, 0.66666666); // should detect [3, 5, 6)
 		test_the_functions(seconds, 3, 99,
 				3, 0.6); // should detect [3, 5, 6, 8)
 		
