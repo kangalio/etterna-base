@@ -146,35 +146,48 @@ pub struct SkillTimeline<T> {
 pub fn skill_timeline<'a, I, T, S>(iterator: I, pre_070: bool) -> SkillTimeline<T>
 where
 	I: IntoIterator<Item = (T, S)>,
-	T: 'a + PartialEq + Copy + Send,
+	T: 'a + PartialEq + Send,
 	S: std::borrow::Borrow<ChartSkillsets>,
 {
-	use itertools::Itertools;
-
 	let skillset_calculation_function = if pre_070 {
 		rating_calc::calculate_player_skillset_rating_pre_070
 	} else {
 		rating_calc::calculate_player_skillset_rating
 	};
 
-	let mut rating_vectors: [Vec<f32>; 7] =
-		[vec![], vec![], vec![], vec![], vec![], vec![], vec![]];
+	let iterator = iterator.into_iter();
+	let approx_num_scores = iterator.size_hint().1.unwrap_or(iterator.size_hint().0);
+	let mut rating_vectors: [Vec<f32>; 7] = [
+		Vec::with_capacity(approx_num_scores),
+		Vec::with_capacity(approx_num_scores),
+		Vec::with_capacity(approx_num_scores),
+		Vec::with_capacity(approx_num_scores),
+		Vec::with_capacity(approx_num_scores),
+		Vec::with_capacity(approx_num_scores),
+		Vec::with_capacity(approx_num_scores),
+	];
 	
 	let mut day_indices: Vec<(T, usize)> = vec![];
-	
-	let grouped_by_day = iterator.into_iter().group_by(|&(day_id, ref _ssr)| day_id);
-	for (day_id, group) in &grouped_by_day {
-		for (_day_id, ssr) in group {
-			let ssr = ssr.borrow();
-			rating_vectors[0].push(ssr.stream);
-			rating_vectors[1].push(ssr.jumpstream);
-			rating_vectors[2].push(ssr.handstream);
-			rating_vectors[3].push(ssr.stamina);
-			rating_vectors[4].push(ssr.jackspeed);
-			rating_vectors[5].push(ssr.chordjack);
-			rating_vectors[6].push(ssr.technical);
+	let mut prev_day_id = None;
+	for (day_id, ssr) in iterator {
+		let ssr = ssr.borrow();
+		rating_vectors[0].push(ssr.stream);
+		rating_vectors[1].push(ssr.jumpstream);
+		rating_vectors[2].push(ssr.handstream);
+		rating_vectors[3].push(ssr.stamina);
+		rating_vectors[4].push(ssr.jackspeed);
+		rating_vectors[5].push(ssr.chordjack);
+		rating_vectors[6].push(ssr.technical);
+
+		if let Some(prev_day_id) = prev_day_id.take() {
+			if prev_day_id != day_id {
+				day_indices.push((prev_day_id, rating_vectors[0].len()));
+			}
 		}
-		day_indices.push((day_id, rating_vectors[0].len()));
+		prev_day_id = Some(day_id);
+	}
+	if let Some(prev_day_id) = prev_day_id {
+		day_indices.push((prev_day_id, rating_vectors[0].len()));
 	}
 
 	let changes = par_iter_maybe(day_indices)
