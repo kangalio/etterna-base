@@ -95,6 +95,19 @@ pub struct TapJudgements {
 	pub misses: u32,
 }
 
+impl From<FullJudgements> for TapJudgements {
+	fn from(judgements: FullJudgements) -> Self {
+		Self {
+			marvelouses: judgements.marvelouses,
+			perfects: judgements.perfects,
+			greats: judgements.greats,
+			goods: judgements.goods,
+			bads: judgements.bads,
+			misses: judgements.misses,
+		}
+	}
+}
+
 impl std::ops::Index<crate::TapJudgement> for TapJudgements {
 	type Output = u32;
 	
