@@ -136,9 +136,10 @@ pub fn is_sorted<T: PartialOrd>(data: &[T]) -> bool {
 pub fn trim_bstr(bstr: &[u8]) -> &[u8] {
 	let start_index = match bstr.iter().position(|&c| !is_ascii_whitespace(c)) {
 		Some(a) => a,
-		None => return &bstr[..0], // when there's no non-whitespace char, return empty slice
+		None => return &[], // when there's no non-whitespace char, return empty slice
 	};
-	let end_index = bstr.iter().rposition(|&c| !is_ascii_whitespace(c)).unwrap(); // can't panic
+	// UNWRAP: if there is no non whitespace char in here, the function would have returned above
+	let end_index = bstr.iter().rposition(|&c| !is_ascii_whitespace(c)).unwrap();
 	&bstr[start_index..=end_index]
 }
 

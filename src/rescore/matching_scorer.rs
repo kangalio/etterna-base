@@ -110,6 +110,8 @@ unsafe fn column_rescore<W: crate::Wife>(
 			println!("Hit {}\t-> Note {:?}\t(dev={:?})",
 					hit.second,
 					hit.assigned_note.map(|n| (*n).second),
+					// UNWRAP: I don't even know, but if we're in debug mode, this is not running in
+					// prod anyway so panicking is fine
 					hit.assigned_note.map(|n| (*n).assigned_hit.as_ref().unwrap().deviation));
 		}
 		println!(".\nTHE NOTE PERSPECTIVE OF THINGS");

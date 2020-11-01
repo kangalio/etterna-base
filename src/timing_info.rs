@@ -23,6 +23,8 @@ pub enum SmBpmStringParseError {
 	InvalidBpmString(lexical_core::Error),
 	#[error("First bpm change is not at beat=0, it's at beat={beat_instead:?}")]
 	FirstBpmChangeNotZero { beat_instead: f64 },
+	#[error("A bpm or beat was NaN")]
+	EncounteredNan,
 }
 
 impl TimingInfo {
@@ -32,14 +34,20 @@ impl TimingInfo {
 		
 		for pair in string.split(|&c| c == b',') {
 			let equal_sign_index = pair.iter().position(|&c| c == b'=')
-					.ok_or(SmBpmStringParseError::MissingEquals)?;
+				.ok_or(SmBpmStringParseError::MissingEquals)?;
 			let beat: f64 = lexical_core::parse_lossy(crate::util::trim_bstr(&pair[..equal_sign_index]))
-					.map_err(SmBpmStringParseError::InvalidBeatString)?;
+				.map_err(SmBpmStringParseError::InvalidBeatString)?;
 			let bpm: f64 = lexical_core::parse_lossy(crate::util::trim_bstr(&pair[equal_sign_index+1..]))
-					.map_err(SmBpmStringParseError::InvalidBpmString)?;
+				.map_err(SmBpmStringParseError::InvalidBpmString)?;
+
+			if beat.is_nan() || bpm.is_nan() {
+				return Err(SmBpmStringParseError::EncounteredNan);
+			}
+
 			changes.push(BpmChange { beat, bpm });
 		}
 		
+		// UNWRAP: We checked in the loop above that all these numbers are non-NaN
 		changes.sort_by(|a, b| a.beat.partial_cmp(&b.beat).unwrap());
 		
 		if changes[0].beat != 0.0 {
