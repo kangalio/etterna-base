@@ -218,7 +218,7 @@ mod tests {
 		
 		let seconds: &[f32] = &[0.0, 3.0, 5.0, 6.0, 8.0];
 		test_the_functions(seconds, 2, 99,
-				2, 0.66666666); // should detect [3, 5, 6)
+				2, 0.6666666); // should detect [3, 5, 6)
 		test_the_functions(seconds, 3, 99,
 				3, 0.6); // should detect [3, 5, 6, 8)
 		

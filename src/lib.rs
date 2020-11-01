@@ -31,7 +31,7 @@ mod judge;
 pub use judge::*;
 
 pub mod prelude {
-	pub use crate::{Rate, Wifescore, ChartSkillsets, UserSkillsets, Skillset7, Skillset8};
+	pub use crate::{Rate, Wifescore, Skillsets7, Skillsets8, Skillset7, Skillset8};
 	pub use crate::structs::*;
 }
 
@@ -115,7 +115,7 @@ where
 /// Representation of a player's ratings over time. See [`skill_timeline`]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct SkillTimeline<T> {
-	pub changes: Vec<(T, UserSkillsets)>,
+	pub changes: Vec<(T, Skillsets8)>,
 }
 
 /// Generate a timeline of player ratings over time. The input is given in form of an iterator
@@ -143,16 +143,20 @@ pub struct SkillTimeline<T> {
 /// let timeline = skill_timeline(scores, false);
 /// assert_eq!(timeline.changes.len(), 2);
 /// ```
-pub fn skill_timeline<'a, I, T, S>(iterator: I, pre_070: bool) -> SkillTimeline<T>
+pub fn skill_timeline<'a, I, T>(iterator: I, pre_070: bool) -> SkillTimeline<T>
 where
-	I: IntoIterator<Item = (T, S)>,
+	I: IntoIterator<Item = (T, Skillsets7)>,
 	T: 'a + PartialEq + Send,
-	S: std::borrow::Borrow<ChartSkillsets>,
 {
-	let skillset_calculation_function = if pre_070 {
+	let skillset_calc_function = if pre_070 {
 		rating_calc::calculate_player_skillset_rating_pre_070
 	} else {
 		rating_calc::calculate_player_skillset_rating
+	};
+	let overall_calc_function = if pre_070 {
+		Skillsets7::calc_ssr_overall_pre_070
+	} else {
+		Skillsets7::calc_ssr_overall
 	};
 
 	let iterator = iterator.into_iter();
@@ -170,7 +174,6 @@ where
 	let mut day_indices: Vec<(T, usize)> = vec![];
 	let mut prev_day_id = None;
 	for (day_id, ssr) in iterator {
-		let ssr = ssr.borrow();
 		rating_vectors[0].push(ssr.stream);
 		rating_vectors[1].push(ssr.jumpstream);
 		rating_vectors[2].push(ssr.handstream);
@@ -191,15 +194,15 @@ where
 	}
 
 	let changes = par_iter_maybe(day_indices)
-		.map(|(day_id, i)| (day_id, UserSkillsets {
-			stream: (skillset_calculation_function)(&rating_vectors[0][..i]),
-			jumpstream: (skillset_calculation_function)(&rating_vectors[1][..i]),
-			handstream: (skillset_calculation_function)(&rating_vectors[2][..i]),
-			stamina: (skillset_calculation_function)(&rating_vectors[3][..i]),
-			jackspeed: (skillset_calculation_function)(&rating_vectors[4][..i]),
-			chordjack: (skillset_calculation_function)(&rating_vectors[5][..i]),
-			technical: (skillset_calculation_function)(&rating_vectors[6][..i]),
-		}))
+		.map(|(day_id, i)| (day_id, overall_calc_function(&Skillsets7 {
+			stream: (skillset_calc_function)(&rating_vectors[0][..i]),
+			jumpstream: (skillset_calc_function)(&rating_vectors[1][..i]),
+			handstream: (skillset_calc_function)(&rating_vectors[2][..i]),
+			stamina: (skillset_calc_function)(&rating_vectors[3][..i]),
+			jackspeed: (skillset_calc_function)(&rating_vectors[4][..i]),
+			chordjack: (skillset_calc_function)(&rating_vectors[5][..i]),
+			technical: (skillset_calc_function)(&rating_vectors[6][..i]),
+		})))
 		.collect();
 
 	SkillTimeline { changes }

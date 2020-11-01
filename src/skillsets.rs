@@ -1,9 +1,9 @@
 use std::convert::{TryFrom, TryInto};
 
-/// Skillset information. Used for chart specific difficulty, i.e. MSD and SSR
+/// Skillset information, excluding overall
 #[derive(Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ChartSkillsets {
+pub struct Skillsets7 {
 	pub stream: f32,
 	pub jumpstream: f32,
 	pub handstream: f32,
@@ -13,28 +13,61 @@ pub struct ChartSkillsets {
 	pub technical: f32,
 }
 
-impl ChartSkillsets {
-	crate::impl_get_skillset!(f32, a, a.overall(), a.overall_pre_070());
+impl Skillsets7 {
+	pub fn get(&self, ss: Skillset7) -> f32 {
+		match ss {
+			Skillset7::Stream => self.stream,
+			Skillset7::Jumpstream => self.jumpstream,
+			Skillset7::Handstream => self.handstream,
+			Skillset7::Stamina => self.stamina,
+			Skillset7::Jackspeed => self.jackspeed,
+			Skillset7::Chordjack => self.chordjack,
+			Skillset7::Technical => self.technical,
+		}
+	}
 
-	/// Return the overall skillset, as derived from the 7 individual skillsets
-	/// 
-	/// ```rust
-	/// # use etterna_base::ChartSkillsets;
-	/// // Fennec Fantasy - Friday Fahrenheit
-	/// let msd = ChartSkillsets {
-	/// 	stream: 22.31,
-	/// 	jumpstream: 22.37,
-	/// 	handstream: 18.99,
-	/// 	stamina: 21.53,
-	/// 	jackspeed: 14.12,
-	/// 	chordjack: 15.85,
-	/// 	technical: 21.47,
-	/// };
-	/// 
-	/// let overall_difficulty = msd.overall();
-	/// assert!((overall_difficulty - 22.99).abs() < 0.01);
-	/// ```
-	pub fn overall(&self) -> f32 {
+	pub fn with_overall(&self, overall: f32) -> Skillsets8 {
+		Skillsets8 {
+			overall,
+			stream: self.stream,
+			jumpstream: self.jumpstream,
+			handstream: self.handstream,
+			stamina: self.stamina,
+			jackspeed: self.jackspeed,
+			chordjack: self.chordjack,
+			technical: self.technical,
+		}
+	}
+
+	pub fn calc_player_overall(&self) -> Skillsets8 {
+		let overall = crate::rating_calc::calculate_player_overall(&[
+			self.stream,
+			self.jumpstream,
+			self.handstream,
+			self.stamina,
+			self.jackspeed,
+			self.chordjack,
+			self.technical,
+		]);
+
+		self.with_overall(overall)
+	}
+
+	pub fn calc_player_overall_pre_070(&self) -> Skillsets8 {
+		let overall = (
+			self.stream
+			+ self.jumpstream
+			+ self.handstream
+			+ self.stamina
+			+ self.jackspeed
+			+ self.chordjack
+			+ self.technical
+		) / 7.0;
+		
+		self.with_overall(overall)
+	}
+
+	pub fn calc_ssr_overall(&self) -> Skillsets8 {
 		let aggregated_skillsets = crate::rating_calc::calculate_score_overall(&[
 			self.stream,
 			self.jumpstream,
@@ -44,6 +77,7 @@ impl ChartSkillsets {
 			self.chordjack,
 			self.technical,
 		]);
+
 		let max_skillset = self.stream
 			.max(self.jumpstream)
 			.max(self.handstream)
@@ -52,72 +86,42 @@ impl ChartSkillsets {
 			.max(self.chordjack)
 			.max(self.technical);
 		
-		aggregated_skillsets.max(max_skillset)
+		let overall = aggregated_skillsets.max(max_skillset);
+		self.with_overall(overall)
 	}
 
-	/// Return the overall skillset with the pre-0.70 formula, as derived from the 7 individual
-	/// skillsets
-	/// 
-	/// ```rust
-	/// # use etterna_base::ChartSkillsets;
-	/// // Fennec Fantasy - Friday Fahrenheit
-	/// let msd = ChartSkillsets {
-	/// 	stream: 22.31,
-	/// 	jumpstream: 22.37,
-	/// 	handstream: 18.99,
-	/// 	stamina: 21.53,
-	/// 	jackspeed: 14.12,
-	/// 	chordjack: 15.85,
-	/// 	technical: 21.47,
-	/// };
-	/// 
-	/// let overall_difficulty = msd.overall_pre_070();
-	/// assert!((overall_difficulty - 22.37).abs() < 0.01);
-	/// ```
-	pub fn overall_pre_070(&self) -> f32 {
-		self.stream
+	pub fn calc_ssr_overall_pre_070(&self) -> Skillsets8 {
+		let max_skillset = self.stream
 			.max(self.jumpstream)
 			.max(self.handstream)
 			.max(self.stamina)
 			.max(self.jackspeed)
 			.max(self.chordjack)
-			.max(self.technical)
+			.max(self.technical);
+		
+		self.with_overall(max_skillset)
 	}
+}
 
-	/// Generate a new instance by calling the provided closure with all seven skillsets
-	/// 
-	/// ```rust
-	/// # use etterna_base::ChartSkillsets;
-	/// let mut x = 0.0;
-	/// let lol = ChartSkillsets::from_fn(|_ss| { x += 1.0; x });
-	/// 
-	/// assert_eq!(lol, ChartSkillsets {
-	/// 	stream: 1.0,
-	/// 	jumpstream: 2.0,
-	/// 	handstream: 3.0,
-	/// 	stamina: 4.0,
-	/// 	jackspeed: 5.0,
-	/// 	chordjack: 6.0,
-	/// 	technical: 7.0,
-	/// });
-	/// ```
-	pub fn from_fn(mut f: impl FnMut(Skillset7) -> f32) -> Self {
-		Self {
-			stream: f(Skillset7::Stream),
-			jumpstream: f(Skillset7::Jumpstream),
-			handstream: f(Skillset7::Handstream),
-			stamina: f(Skillset7::Stamina),
-			jackspeed: f(Skillset7::Jackspeed),
-			chordjack: f(Skillset7::Chordjack),
-			technical: f(Skillset7::Technical),
+impl From<Skillsets8> for Skillsets7 {
+	fn from(s: Skillsets8) -> Self {
+		Skillsets7 {
+			stream: s.stream,
+			jumpstream: s.jumpstream,
+			handstream: s.handstream,
+			stamina: s.stamina,
+			jackspeed: s.jackspeed,
+			chordjack: s.chordjack,
+			technical: s.technical,
 		}
 	}
 }
 
-/// Skillset information. Used for player ratings
+/// Skillset information, excluding overall
 #[derive(Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UserSkillsets {
+pub struct Skillsets8 {
+	pub overall: f32,
 	pub stream: f32,
 	pub jumpstream: f32,
 	pub handstream: f32,
@@ -127,64 +131,18 @@ pub struct UserSkillsets {
 	pub technical: f32,
 }
 
-impl UserSkillsets {
-	crate::impl_get_skillset!(f32, a, a.overall(), a.overall_pre_070());
-
-	/// Return the overall skillset, as derived from the 7 individual skillsets
-	/// 
-	/// ```rust
-	/// # use etterna_base::UserSkillsets;
-	/// let player_rating = UserSkillsets {
-	/// 	stream: 28.3815,
-	/// 	jumpstream: 29.0849,
-	/// 	handstream: 29.3894,
-	/// 	stamina: 28.8329,
-	/// 	jackspeed: 22.2704,
-	/// 	chordjack: 27.2160,
-	/// 	technical: 27.8669,
-	/// };
-	/// 
-	/// let overall_rating = player_rating.overall();
-	/// assert!((overall_rating - 28.7212).abs() < 0.01);
-	/// ```
-	pub fn overall(&self) -> f32 {
-		crate::rating_calc::calculate_player_overall(&[
-			self.stream,
-			self.jumpstream,
-			self.handstream,
-			self.stamina,
-			self.jackspeed,
-			self.chordjack,
-			self.technical,
-		])
-	}
-
-	/// Return the overall skillset with the pre-0.70 formula, as derived from the 7 individual
-	/// skillsets
-	/// 
-	/// ```rust
-	/// # use etterna_base::UserSkillsets;
-	/// let player_rating = UserSkillsets {
-	/// 	stream: 27.6060,
-	/// 	jumpstream: 27.6567,
-	/// 	handstream: 28.5327,
-	/// 	stamina: 27.7139,
-	/// 	jackspeed: 25.4858,
-	/// 	chordjack: 27.8027,
-	/// 	technical: 27.8662,
-	/// };
-	/// 
-	/// let overall_rating = player_rating.overall_pre_070();
-	/// assert!((overall_rating - 27.5234).abs() < 0.0001);
-	/// ```
-	pub fn overall_pre_070(&self) -> f32 {
-		(self.stream
-			+ self.jumpstream
-			+ self.handstream
-			+ self.stamina
-			+ self.jackspeed
-			+ self.chordjack
-			+ self.technical) / 7.0
+impl Skillsets8 {
+	pub fn get(&self, ss: Skillset8) -> f32 {
+		match ss {
+			Skillset8::Overall => self.overall,
+			Skillset8::Stream => self.stream,
+			Skillset8::Jumpstream => self.jumpstream,
+			Skillset8::Handstream => self.handstream,
+			Skillset8::Stamina => self.stamina,
+			Skillset8::Jackspeed => self.jackspeed,
+			Skillset8::Chordjack => self.chordjack,
+			Skillset8::Technical => self.technical,
+		}
 	}
 }
 
