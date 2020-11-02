@@ -154,9 +154,9 @@ where
 		rating_calc::calculate_player_skillset_rating
 	};
 	let overall_calc_function = if pre_070 {
-		Skillsets7::calc_ssr_overall_pre_070
+		Skillsets7::calc_player_overall_pre_070
 	} else {
-		Skillsets7::calc_ssr_overall
+		Skillsets7::calc_player_overall
 	};
 
 	let iterator = iterator.into_iter();
