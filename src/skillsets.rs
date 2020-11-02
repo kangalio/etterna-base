@@ -105,15 +105,7 @@ impl Skillsets7 {
 
 impl From<Skillsets8> for Skillsets7 {
 	fn from(s: Skillsets8) -> Self {
-		Skillsets7 {
-			stream: s.stream,
-			jumpstream: s.jumpstream,
-			handstream: s.handstream,
-			stamina: s.stamina,
-			jackspeed: s.jackspeed,
-			chordjack: s.chordjack,
-			technical: s.technical,
-		}
+		s.to_skillsets7()
 	}
 }
 
@@ -142,6 +134,18 @@ impl Skillsets8 {
 			Skillset8::Jackspeed => self.jackspeed,
 			Skillset8::Chordjack => self.chordjack,
 			Skillset8::Technical => self.technical,
+		}
+	}
+
+	pub fn to_skillsets7(&self) -> Skillsets7 {
+		Skillsets7 {
+			stream: self.stream,
+			jumpstream: self.jumpstream,
+			handstream: self.handstream,
+			stamina: self.stamina,
+			jackspeed: self.jackspeed,
+			chordjack: self.chordjack,
+			technical: self.technical,
 		}
 	}
 }
