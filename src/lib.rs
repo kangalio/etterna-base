@@ -1,4 +1,9 @@
-#![allow(clippy::len_zero, clippy::tabs_in_doc_comments, clippy::collapsible_if, clippy::needless_bool)]
+#![allow(
+	clippy::len_zero,
+	clippy::tabs_in_doc_comments,
+	clippy::collapsible_if,
+	clippy::needless_bool
+)]
 
 mod wife;
 pub use wife::*;
@@ -31,8 +36,8 @@ mod judge;
 pub use judge::*;
 
 pub mod prelude {
-	pub use crate::{Rate, Wifescore, Skillsets7, Skillsets8, Skillset7, Skillset8};
 	pub use crate::structs::*;
+	pub use crate::{Rate, Skillset7, Skillset8, Skillsets7, Skillsets8, Wifescore};
 }
 
 mod util;
@@ -81,7 +86,7 @@ macro_rules! impl_get_skillset {
 				crate::Skillset8::Technical => self.technical,
 			}
 		}
-	}
+	};
 }
 
 // do we even need this?
@@ -120,17 +125,17 @@ pub struct SkillTimeline<T> {
 
 /// Generate a timeline of player ratings over time. The input is given in form of an iterator
 /// over tuples of each score's day identifier and the score's skillsets.
-/// 
+///
 /// "What's a day identifier" you might ask. Well, this function doesn't re-calculate the player's
 /// rating for each and every score. That would be wasteful. Instead, scores are grouped, usually
 /// by day, and the rating is re-calculated for each day.
-/// 
+///
 /// You can use almost any type you want as a day identifier as long as it can be compared (has a
 /// PartialEq impl).
-/// 
+///
 /// You can either use the current, 0.70+ algorithm, or the old algorithm from older game versions.
 /// For that, use the `pre_070` parameter.
-/// 
+///
 /// ```rust,ignore
 /// scores = &[
 /// 	("2020-08-05", ChartSkillsets { ... }),
@@ -139,7 +144,7 @@ pub struct SkillTimeline<T> {
 /// 	("2020-08-06", ChartSkillsets { ... }),
 /// 	("2020-08-06", ChartSkillsets { ... }),
 /// ];
-/// 
+///
 /// let timeline = skill_timeline(scores, false);
 /// assert_eq!(timeline.changes.len(), 2);
 /// ```
@@ -170,7 +175,7 @@ where
 		Vec::with_capacity(approx_num_scores),
 		Vec::with_capacity(approx_num_scores),
 	];
-	
+
 	let mut day_indices: Vec<(T, usize)> = vec![];
 	let mut prev_day_id = None;
 	for (day_id, ssr) in iterator {
@@ -194,15 +199,20 @@ where
 	}
 
 	let changes = par_iter_maybe(day_indices)
-		.map(|(day_id, i)| (day_id, overall_calc_function(&Skillsets7 {
-			stream: (skillset_calc_function)(&rating_vectors[0][..i]),
-			jumpstream: (skillset_calc_function)(&rating_vectors[1][..i]),
-			handstream: (skillset_calc_function)(&rating_vectors[2][..i]),
-			stamina: (skillset_calc_function)(&rating_vectors[3][..i]),
-			jackspeed: (skillset_calc_function)(&rating_vectors[4][..i]),
-			chordjack: (skillset_calc_function)(&rating_vectors[5][..i]),
-			technical: (skillset_calc_function)(&rating_vectors[6][..i]),
-		})))
+		.map(|(day_id, i)| {
+			(
+				day_id,
+				overall_calc_function(&Skillsets7 {
+					stream: (skillset_calc_function)(&rating_vectors[0][..i]),
+					jumpstream: (skillset_calc_function)(&rating_vectors[1][..i]),
+					handstream: (skillset_calc_function)(&rating_vectors[2][..i]),
+					stamina: (skillset_calc_function)(&rating_vectors[3][..i]),
+					jackspeed: (skillset_calc_function)(&rating_vectors[4][..i]),
+					chordjack: (skillset_calc_function)(&rating_vectors[5][..i]),
+					technical: (skillset_calc_function)(&rating_vectors[6][..i]),
+				}),
+			)
+		})
 		.collect();
 
 	SkillTimeline { changes }

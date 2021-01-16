@@ -3,27 +3,25 @@
 #[doc(hidden)]
 #[macro_export]
 macro_rules! ok_or_continue {
-	( $e:expr ) => (
+	( $e:expr ) => {
 		match $e {
 			Ok(value) => value,
 			Err(_e) => {
 				continue;
-			},
-		}
-	)
+				}
+			}
+	};
 }
 
 #[doc(hidden)]
 #[macro_export]
 macro_rules! some_or_continue {
-	( $e:expr ) => (
+	( $e:expr ) => {
 		match $e {
 			Some(value) => value,
-			None => {
-				continue
-			},
-		}
-	)
+			None => continue,
+			}
+	};
 }
 
 pub struct SplitNewlines<'a> {
@@ -34,22 +32,24 @@ pub struct SplitNewlines<'a> {
 
 impl<'a> Iterator for SplitNewlines<'a> {
 	type Item = &'a [u8];
-	
+
 	fn next(&mut self) -> Option<Self::Item> {
 		// Check stop condition
 		if self.current_pos >= self.bytes.len() {
 			return None;
 		}
-		
+
 		let start_pos = self.current_pos;
 		self.current_pos += self.min_line_length; // skip ahead as far as we can get away with
-		
+
 		while let Some(&c) = self.bytes.get(self.current_pos) {
-			if c == b'\n' { break }
+			if c == b'\n' {
+				break;
+			}
 			self.current_pos += 1;
 		}
 		let line = &self.bytes[start_pos..self.current_pos];
-		
+
 		self.current_pos += 1; // Advance one to be on the start of a line again
 		Some(line)
 	}
@@ -76,7 +76,11 @@ impl<'a, I: Iterator> Iterator for CountInto<'a, I> {
 // When min_line_length is zero, the expected result for "xxx\n" would be ["xxx", ""]. However,
 // the result is gonna be just ["xxx"]. I know it's unintuitive, but I dunno how to fix
 pub fn split_newlines(bytes: &[u8], min_line_length: usize) -> SplitNewlines<'_> {
-	SplitNewlines { bytes, min_line_length, current_pos: 0 }
+	SplitNewlines {
+		bytes,
+		min_line_length,
+		current_pos: 0,
+	}
 }
 
 // Extracts a string based on a prefix and a postfix. If prefix or postfix couldn't be found,
@@ -84,9 +88,9 @@ pub fn split_newlines(bytes: &[u8], min_line_length: usize) -> SplitNewlines<'_>
 pub fn extract_str<'a>(string: &'a str, before: &str, after: &str) -> Option<&'a str> {
 	let before_index = twoway::find_str(string, before)?;
 	let start_index = before_index + before.len();
-	
+
 	let end_index = start_index + twoway::find_str(&string[start_index..], after)?;
-	
+
 	Some(&string[start_index..end_index])
 }
 
@@ -94,9 +98,9 @@ pub fn extract_str<'a>(string: &'a str, before: &str, after: &str) -> Option<&'a
 pub fn extract_bstr<'a>(string: &'a [u8], before: &[u8], after: &[u8]) -> Option<&'a [u8]> {
 	let before_index = twoway::find_bytes(string, before)?;
 	let start_index = before_index + before.len();
-	
+
 	let end_index = start_index + twoway::find_bytes(&string[start_index..], after)?;
-	
+
 	Some(&string[start_index..end_index])
 }
 
@@ -104,13 +108,15 @@ pub fn extract_bstr<'a>(string: &'a [u8], before: &[u8], after: &[u8]) -> Option
 /// iterator. In case the iterator is empty or has only one element, None is returned instead of
 /// the first and last element.
 #[allow(clippy::type_complexity)]
-pub fn first_and_last_and_count<I: std::iter::Iterator>(mut iterator: I) -> (Option<(I::Item, I::Item)>, u64) {
+pub fn first_and_last_and_count<I: std::iter::Iterator>(
+	mut iterator: I,
+) -> (Option<(I::Item, I::Item)>, u64) {
 	// exception case handling
 	let first_elem = match iterator.next() {
 		Some(a) => a,
 		None => return (None, 0),
 	};
-	
+
 	// count elements and keep track of last elem
 	let mut count = 1; // we got one element already
 	let mut last_seen_elem = None;
@@ -118,13 +124,13 @@ pub fn first_and_last_and_count<I: std::iter::Iterator>(mut iterator: I) -> (Opt
 		last_seen_elem = Some(elem);
 		count += 1;
 	}
-	
+
 	// exception case handling
 	let last_elem = match last_seen_elem {
 		Some(a) => a,
 		None => return (None, 1),
 	};
-	
+
 	(Some((first_elem, last_elem)), count)
 }
 
@@ -145,8 +151,9 @@ pub fn trim_bstr(bstr: &[u8]) -> &[u8] {
 
 // I wish I knew how to make this properly generic, over arbitrary number types
 pub fn mean<I: Iterator>(iterator: I) -> f32
-		where I::Item: std::ops::Deref<Target=f32> {
-	
+where
+	I::Item: std::ops::Deref<Target = f32>,
+{
 	let mut sum = 0.0;
 	let mut count = 0;
 	for value_ref in iterator {
@@ -191,75 +198,95 @@ pub fn longest_true_sequence(iterator: impl IntoIterator<Item = bool>) -> u32 {
 
 /// Checks whether two slices are equal to one another, disregarding order and duplicates
 pub fn is_equal_no_order_no_duplicates<T: PartialEq>(a: &[T], b: &[T]) -> bool {
-	a.iter().all(|a_elem| b.contains(a_elem))
-	&& b.iter().all(|b_elem| a.contains(b_elem))
+	a.iter().all(|a_elem| b.contains(a_elem)) && b.iter().all(|b_elem| a.contains(b_elem))
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*; // Use all functions above
-	
+
 	// Util function, other tests use this
 	#[macro_export]
 	#[doc(hidden)]
 	macro_rules! assert_float_eq {
-		($left: expr, $right: expr; epsilon = $epsilon: expr) => (
+		($left: expr, $right: expr; epsilon = $epsilon: expr) => {
 			// Evaluate expressions
 			let left = $left;
 			let right = $right;
 			let delta = (right - left).abs();
-			
+
 			if delta > $epsilon {
-				panic!("assertion failed: `(left =~ right)`
+				panic!(
+					"assertion failed: `(left =~ right)`
 						  left: `{:?}`
 						 right: `{:?}`
 						 delta: `{:?}`",
-						&left, &right, &delta);
-			}
-		)
+					&left, &right, &delta
+					);
+				}
+		};
 	}
-	
+
 	#[test]
 	fn test_split_newlines() {
 		let text = b"10charssss\n6chars\n10charssss\n6chars\n";
 		let lines: Vec<_> = split_newlines(text as &[u8], 6).collect();
-		assert_eq!(lines, vec![b"10charssss" as &[u8], b"6chars" as &[u8], b"10charssss" as &[u8],
-							   b"6chars" as &[u8]]);
-		
+		assert_eq!(
+			lines,
+			vec![
+				b"10charssss" as &[u8],
+				b"6chars" as &[u8],
+				b"10charssss" as &[u8],
+				b"6chars" as &[u8]
+			]
+		);
+
 		let lines: Vec<&[u8]> = split_newlines(text as &[u8], 7).collect();
-		assert_eq!(lines, vec![b"10charssss" as &[u8], b"6chars\n10charssss" as &[u8],
-							   b"6chars\n" as &[u8]]); // we expect the \n in here because it's
-													   // covered by the skip-ahead length of 7
+		assert_eq!(
+			lines,
+			vec![
+				b"10charssss" as &[u8],
+				b"6chars\n10charssss" as &[u8],
+				b"6chars\n" as &[u8]
+			]
+		); // we expect the \n in here because it's
+		 // covered by the skip-ahead length of 7
 	}
-	
+
 	#[test]
 	fn test_extract_str_and_bstr() {
 		for (string, before, after, expected_outcome) in [
-				("#TITLE:helo;", "#TITLE:", ";", Some("helo")),
-				("#TITLE::::#TITLE:;", "#TITLE:", ";", Some(":::#TITLE:")),
-				("#TITLE:helo:", "#TITLE:", ";", None),
-				("#TITLE helo;", "#TITLE:", ";", None),
-				].iter() {
-			
+			("#TITLE:helo;", "#TITLE:", ";", Some("helo")),
+			("#TITLE::::#TITLE:;", "#TITLE:", ";", Some(":::#TITLE:")),
+			("#TITLE:helo:", "#TITLE:", ";", None),
+			("#TITLE helo;", "#TITLE:", ";", None),
+		]
+		.iter()
+		{
 			assert_eq!(extract_str(string, before, after), *expected_outcome);
-			assert_eq!(extract_bstr(string.as_bytes(), before.as_bytes(), after.as_bytes()),
-					expected_outcome.map(|s| s.as_bytes()));
+			assert_eq!(
+				extract_bstr(string.as_bytes(), before.as_bytes(), after.as_bytes()),
+				expected_outcome.map(|s| s.as_bytes())
+			);
 		}
 	}
-	
+
 	#[test]
 	fn test_first_and_last_and_count() {
-		assert_eq!(first_and_last_and_count("2357".chars()), (Some(('2', '7')), 4));
+		assert_eq!(
+			first_and_last_and_count("2357".chars()),
+			(Some(('2', '7')), 4)
+		);
 		assert_eq!(first_and_last_and_count("2".chars()), (None, 1));
 		assert_eq!(first_and_last_and_count("".chars()), (None, 0));
 	}
-	
+
 	#[test]
 	fn test_is_sorted() {
 		assert_eq!(is_sorted(&[1, 2, 3, 2]), false);
 		assert_eq!(is_sorted(&[1, 2, 2, 3]), true);
 	}
-	
+
 	#[test]
 	fn test_trim_bstr() {
 		assert_eq!(trim_bstr(b" hello world   "), b"hello world");
@@ -268,7 +295,7 @@ mod tests {
 		assert_eq!(trim_bstr(b"hello world"), b"hello world");
 		assert_eq!(trim_bstr(b" hello world \n\n \t"), b"hello world");
 	}
-	
+
 	#[test]
 	fn test_mean() {
 		assert_float_eq!(mean([0.0, 6.0, 1.0, 2.0].iter()), 2.25;
@@ -278,12 +305,15 @@ mod tests {
 		assert_float_eq!(mean([-897193848.0, 69.0, 893784444.0, 211122.0, 422.0].iter()), -639558.2;
 				epsilon=10.0); // heh, what a large epsilon value. needed though
 	}
-	
+
 	#[test]
 	fn test_is_ascii_whitespace() {
 		let whitespace_chars: &[u8] = b" \t\n\r\x0c\x0b";
 		for char_code in 0..=255u8 {
-			assert_eq!(is_ascii_whitespace(char_code), whitespace_chars.contains(&char_code));
+			assert_eq!(
+				is_ascii_whitespace(char_code),
+				whitespace_chars.contains(&char_code)
+			);
 		}
 	}
 

@@ -6,7 +6,7 @@ use super::Wife;
 // erf approxmation function, as used in Etterna (same file as in the link below)
 fn ett_erf(x: f32) -> f32 {
 	let exp = |x| std::f32::consts::E.powf(x);
-	
+
 	const A1: f32 = 0.254829592;
 	const A2: f32 = -0.284496736;
 	const A3: f32 = 1.421413741;
@@ -21,7 +21,7 @@ fn ett_erf(x: f32) -> f32 {
 	let y = 1.0 - (((((A5 * t + A4) * t) + A3) * t + A2) * t + A1) * t * exp(-x * x);
 
 	sign * y
-} 
+}
 
 /// 3rd revision of Etterna's Wife scoring system
 pub struct Wife3;

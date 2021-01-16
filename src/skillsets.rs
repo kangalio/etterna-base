@@ -54,16 +54,14 @@ impl Skillsets7 {
 	}
 
 	pub fn calc_player_overall_pre_070(&self) -> Skillsets8 {
-		let overall = (
-			self.stream
-			+ self.jumpstream
-			+ self.handstream
-			+ self.stamina
-			+ self.jackspeed
-			+ self.chordjack
-			+ self.technical
-		) / 7.0;
-		
+		let overall =
+			(self.stream
+				+ self.jumpstream
+				+ self.handstream
+				+ self.stamina + self.jackspeed
+				+ self.chordjack + self.technical)
+				/ 7.0;
+
 		self.with_overall(overall)
 	}
 
@@ -78,27 +76,29 @@ impl Skillsets7 {
 			self.technical,
 		]);
 
-		let max_skillset = self.stream
+		let max_skillset = self
+			.stream
 			.max(self.jumpstream)
 			.max(self.handstream)
 			.max(self.stamina)
 			.max(self.jackspeed)
 			.max(self.chordjack)
 			.max(self.technical);
-		
+
 		let overall = aggregated_skillsets.max(max_skillset);
 		self.with_overall(overall)
 	}
 
 	pub fn calc_ssr_overall_pre_070(&self) -> Skillsets8 {
-		let max_skillset = self.stream
+		let max_skillset = self
+			.stream
 			.max(self.jumpstream)
 			.max(self.handstream)
 			.max(self.stamina)
 			.max(self.jackspeed)
 			.max(self.chordjack)
 			.max(self.technical);
-		
+
 		self.with_overall(max_skillset)
 	}
 }
@@ -173,9 +173,9 @@ impl Skillset7 {
 	}
 
 	/// Get a list of all skillsets
-	/// 
+	///
 	/// Useful for tasks that require operating on all skillsets individually
-	/// 
+	///
 	/// ```rust,no_run
 	/// # use etterna_base::Skillset7;
 	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
@@ -184,14 +184,21 @@ impl Skillset7 {
 	/// }
 	/// ```
 	pub fn list() -> &'static [Self] {
-		&[Self::Stream, Self::Jumpstream, Self::Handstream, Self::Stamina, Self::Jackspeed,
-			Self::Chordjack, Self::Technical]
+		&[
+			Self::Stream,
+			Self::Jumpstream,
+			Self::Handstream,
+			Self::Stamina,
+			Self::Jackspeed,
+			Self::Chordjack,
+			Self::Technical,
+		]
 	}
 
 	/// Iterate all skillsets
-	/// 
+	///
 	/// Useful for tasks that require operating on all skillsets individually
-	/// 
+	///
 	/// ```rust,no_run
 	/// # use etterna_base::Skillset7;
 	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
@@ -199,12 +206,12 @@ impl Skillset7 {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
 	/// ```
-	pub fn iter() -> impl Iterator<Item=Self> {
+	pub fn iter() -> impl Iterator<Item = Self> {
 		Self::list().iter().copied()
 	}
 
 	/// Self-explanatory.
-	/// 
+	///
 	/// ```rust
 	/// # use etterna_base::{Skillset7, Skillset8};
 	/// assert_eq!(Skillset7::Stream.into_skillset8(), Skillset8::Stream);
@@ -240,9 +247,9 @@ pub enum Skillset8 {
 impl Skillset8 {
 	/// Converts user input into a skillset variant, case-insensitively. Most community-accepted
 	/// spellings of the skillsets are recognized.
-	/// 
+	///
 	/// Returns `None` If the given user input can't be parsed.
-	/// 
+	///
 	/// # Example
 	/// ```rust
 	/// # use etterna_base::Skillset8;
@@ -266,9 +273,9 @@ impl Skillset8 {
 	}
 
 	/// Get a list of all skillsets
-	/// 
+	///
 	/// Useful for tasks that require operating on all skillsets individually
-	/// 
+	///
 	/// ```rust,no_run
 	/// # use etterna_base::Skillset8;
 	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
@@ -277,14 +284,22 @@ impl Skillset8 {
 	/// }
 	/// ```
 	pub fn list() -> &'static [Self] {
-		&[Self::Overall, Self::Stream, Self::Jumpstream, Self::Handstream, Self::Stamina,
-			Self::Jackspeed, Self::Chordjack, Self::Technical]
+		&[
+			Self::Overall,
+			Self::Stream,
+			Self::Jumpstream,
+			Self::Handstream,
+			Self::Stamina,
+			Self::Jackspeed,
+			Self::Chordjack,
+			Self::Technical,
+		]
 	}
 
 	/// Iterate all skillsets
-	/// 
+	///
 	/// Useful for tasks that require operating on all skillsets individually
-	/// 
+	///
 	/// ```rust,no_run
 	/// # use etterna_base::Skillset8;
 	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
@@ -292,12 +307,12 @@ impl Skillset8 {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
 	/// ```
-	pub fn iter() -> impl Iterator<Item=Self> {
+	pub fn iter() -> impl Iterator<Item = Self> {
 		Self::list().iter().copied()
 	}
 
 	/// Convert into a Skillset7, converting Overall into None along the way.
-	/// 
+	///
 	/// ```rust
 	/// # use etterna_base::{Skillset8, Skillset7};
 	/// assert_eq!(Skillset8::Stream.into_skillset7(), Some(Skillset7::Stream));
@@ -332,13 +347,13 @@ impl std::convert::From<Skillset7> for Skillset8 {
 }
 
 impl std::fmt::Display for Skillset7 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{:?}", self)
+	}
 }
 
 impl std::fmt::Display for Skillset8 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{:?}", self)
+	}
 }

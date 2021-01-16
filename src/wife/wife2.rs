@@ -20,5 +20,5 @@ impl Wife for Wife2 {
 		let score = (2.0 - -8.0) * (1.0 - y) + -8.0;
 
 		score / 2.0 // revert max=2 scaling
-	}	
+	}
 }

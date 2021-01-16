@@ -1,5 +1,5 @@
 /// Specification of a judgement level
-/// 
+///
 /// For detailed information, see
 /// [this spreadsheet](https://docs.google.com/spreadsheets/d/1syi5aN6sTiDA2Bs_lzZjsLQ1yCEhxl5EnAd6EsD6cF4)
 /// from Foxfire and poco0317
@@ -14,7 +14,7 @@ pub struct Judge {
 	pub roll_window: f32,
 	/// This is the window in which you can hit a mine, assuming no notes are prioritized. This is a
 	/// +/- value.
-	/// 
+	///
 	/// Before universal mine timing the mine window was equal to the current judge's great window.
 	pub mine_window: f32,
 	pub(crate) timing_scale: f32,

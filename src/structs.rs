@@ -2,7 +2,12 @@
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Difficulty {
-	Beginner, Easy, Medium, Hard, Challenge, Edit
+	Beginner,
+	Easy,
+	Medium,
+	Hard,
+	Challenge,
+	Edit,
 }
 
 impl Difficulty {
@@ -23,7 +28,7 @@ impl Difficulty {
 
 	/// Parse a long difficulty string. Some difficulties has multiple spellings; for example
 	/// "Challenge", "Expert" and "Insane".
-	/// 
+	///
 	/// This function is case insensitive
 	pub fn from_long_string(string: &str) -> Option<Self> {
 		match string.to_ascii_lowercase().as_str() {
@@ -110,9 +115,9 @@ impl From<FullJudgements> for TapJudgements {
 
 impl std::ops::Index<crate::TapJudgement> for TapJudgements {
 	type Output = u32;
-	
-    fn index(&self, index: crate::TapJudgement) -> &Self::Output {
-        match index {
+
+	fn index(&self, index: crate::TapJudgement) -> &Self::Output {
+		match index {
 			crate::TapJudgement::Marvelous => &self.marvelouses,
 			crate::TapJudgement::Perfect => &self.perfects,
 			crate::TapJudgement::Great => &self.greats,
@@ -120,12 +125,12 @@ impl std::ops::Index<crate::TapJudgement> for TapJudgements {
 			crate::TapJudgement::Bad => &self.bads,
 			crate::TapJudgement::Miss => &self.misses,
 		}
-    }
+	}
 }
 
 impl std::ops::IndexMut<crate::TapJudgement> for TapJudgements {
-    fn index_mut(&mut self, index: crate::TapJudgement) -> &mut Self::Output {
-        match index {
+	fn index_mut(&mut self, index: crate::TapJudgement) -> &mut Self::Output {
+		match index {
 			crate::TapJudgement::Marvelous => &mut self.marvelouses,
 			crate::TapJudgement::Perfect => &mut self.perfects,
 			crate::TapJudgement::Great => &mut self.greats,
@@ -133,7 +138,7 @@ impl std::ops::IndexMut<crate::TapJudgement> for TapJudgements {
 			crate::TapJudgement::Bad => &mut self.bads,
 			crate::TapJudgement::Miss => &mut self.misses,
 		}
-    }
+	}
 }
 
 /// Type of a note
@@ -158,14 +163,14 @@ pub struct Wifescore {
 
 impl Wifescore {
 	/// Makes a Wifescore from a value, assumed to be scaled to a max of 100
-	/// 
+	///
 	/// Returns None if the percentage is over 100%, or if it is infinite or NaN
 	pub fn from_percent(percent: f32) -> Option<Self> {
 		Self::from_proportion(percent / 100.0)
 	}
 
 	/// Makes a Wifescore from a value, assumed to be scaled to a max of 1
-	/// 
+	///
 	/// Returns None if the proportion is over 1.0 (100%), or if it is infinite or NaN
 	pub fn from_proportion(proportion: f32) -> Option<Self> {
 		if proportion.is_infinite() || proportion.is_nan() || proportion > 1.0 {
@@ -187,16 +192,18 @@ impl Wifescore {
 }
 
 impl std::fmt::Display for Wifescore {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.2}%", self.as_percent())
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{:.2}%", self.as_percent())
+	}
 }
 
 #[allow(clippy::derive_ord_xor_partial_ord)] // the reasoning doesn't apply here
 impl Ord for Wifescore {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		other.partial_cmp(other).expect("Can't happen; this wrapper guarantees non-NaN")
-    }
+	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+		other
+			.partial_cmp(other)
+			.expect("Can't happen; this wrapper guarantees non-NaN")
+	}
 }
 
 // This can't be a derive for whatever reason /shrug
@@ -299,10 +306,10 @@ pub trait SimpleReplay {
 	// fn rescore<W: crate::Wife>(&self) -> crate::Wifescore { todo!() }
 
 	/// Finds the longest combo of notes evaluating to true in the given closure
-	/// 
+	///
 	/// The note deviations passed into the closure are always positive. In case of a miss, the
 	/// closure call is skipped entirely and `false` is inserted.
-	/// 
+	///
 	/// # Example
 	/// Find the longest marvelous combo:
 	/// ```rust,ignore
@@ -324,7 +331,7 @@ pub trait SimpleReplay {
 	fn mean_deviation(&self) -> f32 {
 		let mut num_deviations = 0;
 		let mut deviations_sum = 0.0;
-		
+
 		for hit in self.iter_hits() {
 			if let crate::Hit::Hit { deviation } = hit {
 				num_deviations += 1;
@@ -361,7 +368,7 @@ impl TapJudgement {
 }
 
 /// Represents a player hit of a single note
-/// 
+///
 /// The deviation value is in seconds and may be negative
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -439,10 +446,10 @@ impl Hit {
 	/// Whether this hit is considered a miss. Note the distinction to [`Self::was_missed`]! This
 	/// can return true even if the user _did_ hit the note: A deviation of 200ms is a late bad on
 	/// J1 but a "miss" on J4.
-	/// 
+	///
 	/// If you want to check whether the note was truly **missed**, use `if hit == Hit::Miss` or
 	/// `if let Hit::Miss = hit` instead.
-	/// 
+	///
 	/// ```rust
 	/// # use etterna_base::{Hit, J1, J4};
 	/// assert!(Hit::Hit { deviation: -0.02 }.is_considered_miss(J4) == false);
@@ -460,7 +467,7 @@ impl Hit {
 	/// Whether the note has not been hit by the player. Note the distincion to
 	/// [`Self::is_considered_miss`]! Even a, say, 250ms late hit from J1 would return `false`
 	/// here.
-	/// 
+	///
 	/// ```rust
 	/// # use etterna_base::{Hit, J1, J4};
 	/// assert!(Hit::Hit { deviation: -0.02 }.was_missed() == false);
@@ -494,14 +501,14 @@ impl NoteRow {
 	pub fn bits(self) -> u32 {
 		self.bits
 	}
-	
+
 	/// Returns whether there is a tap at the given index, where 0 is the leftmost lane.
 	pub fn tap_at(self, index: u32) -> bool {
 		(self.bits & (1 << index)) > 0
 	}
 
 	/// Returns the number of notes that this row spans
-	/// 
+	///
 	/// ```rust
 	/// # use etterna_base::NoteRow;
 	/// assert_eq!(NoteRow::from_bits(0b10101).width(), 5);
@@ -524,7 +531,7 @@ impl NoteRow {
 
 	/// Instantiates from a bitset stored in an integer, where the least significant bit corresponds
 	/// to the leftmost lane
-	/// 
+	///
 	/// ```rust
 	/// # use crate::NoteRow;
 	/// assert_eq!(&NoteRow::from_bits_lsb_left(0b1110).format('x'), " xxx");
@@ -535,7 +542,7 @@ impl NoteRow {
 
 	/// Instantiates from a bitset stored in an integer, where the least significant bit corresponds
 	/// to the rightmost lane
-	/// 
+	///
 	/// ```rust
 	/// # use crate::NoteRow;
 	/// assert_eq!(&NoteRow::from_bits_lsb_right(0b1110).format('x'), "xxx ");
@@ -563,7 +570,7 @@ impl NoteRow {
 	}
 
 	/// Mirror the notes, so that any notes on the left end up on the right and vice-versa
-	/// 
+	///
 	/// ```rust
 	/// # use crate::NoteRow;
 	/// assert_eq!(NoteRow::from_lsb_right(0b110).mirror(), NoteRow::from_lsb_right(0b011));

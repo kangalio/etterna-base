@@ -26,13 +26,13 @@ pub trait Wife {
 
 	/// Utility function to apply this wifescore algorithm to a list of note hits, mine hits and
 	/// hold drops.
-	/// 
+	///
 	/// Returns None if the `note_hits` iterator is empty
 	fn apply(
-		note_hits: impl IntoIterator<Item=crate::Hit>,
+		note_hits: impl IntoIterator<Item = crate::Hit>,
 		num_mine_hits: u32,
 		num_hold_drops: u32,
-		judge: &crate::Judge
+		judge: &crate::Judge,
 	) -> Option<crate::Wifescore> {
 		let mut num_note_hits = 0;
 		let mut wifescore_sum = 0.0;
@@ -71,21 +71,64 @@ mod tests {
 
 		#[allow(clippy::excessive_precision)]
 		let test_data: &[[[f32; TEST_WIFE_FNS.len()]; TEST_JUDGES.len()]; TEST_DEVIATIONS.len()] = &[
-			[[ 1.00000000,  1.00000000], [ 1.00000000,  1.00000000], [ 1.00000000,  1.00000000]],
-			[[ 0.99542332,  0.99242789], [ 0.97769690,  0.97078007], [-2.38148451, -1.75365114]],
-			[[-0.43687677, -0.93580455], [-2.38148451, -2.03260875], [-4.00000000, -2.75000000]],
-			[[-1.21131277, -1.37423515], [-3.18280602, -2.72608685], [-4.00000000, -2.75000000]],
-			[[-1.23852777, -1.38935339], [-3.20406675, -2.75000000], [-4.00000000, -2.75000000]],
-			[[-1.77302504, -1.69171941], [-3.54750085, -2.75000000], [-4.00000000, -2.75000000]],
-			[[-3.05441713, -2.59881711], [-3.94453931, -2.75000000], [-4.00000000, -2.75000000]],
-			[[-4.00000000, -2.75000000], [-4.00000000, -2.75000000], [-4.00000000, -2.75000000]],
+			[
+				[1.00000000, 1.00000000],
+				[1.00000000, 1.00000000],
+				[1.00000000, 1.00000000],
+			],
+			[
+				[0.99542332, 0.99242789],
+				[0.97769690, 0.97078007],
+				[-2.38148451, -1.75365114],
+			],
+			[
+				[-0.43687677, -0.93580455],
+				[-2.38148451, -2.03260875],
+				[-4.00000000, -2.75000000],
+			],
+			[
+				[-1.21131277, -1.37423515],
+				[-3.18280602, -2.72608685],
+				[-4.00000000, -2.75000000],
+			],
+			[
+				[-1.23852777, -1.38935339],
+				[-3.20406675, -2.75000000],
+				[-4.00000000, -2.75000000],
+			],
+			[
+				[-1.77302504, -1.69171941],
+				[-3.54750085, -2.75000000],
+				[-4.00000000, -2.75000000],
+			],
+			[
+				[-3.05441713, -2.59881711],
+				[-3.94453931, -2.75000000],
+				[-4.00000000, -2.75000000],
+			],
+			[
+				[-4.00000000, -2.75000000],
+				[-4.00000000, -2.75000000],
+				[-4.00000000, -2.75000000],
+			],
 		];
 
 		for (&deviation, test_data) in izip!(&TEST_DEVIATIONS, test_data) {
 			for (&judge, test_data) in izip!(&TEST_JUDGES, test_data) {
 				for (&wife_fn, &expected) in izip!(&TEST_WIFE_FNS, test_data) {
-					assert!((wife_fn(crate::Hit::Hit { deviation }, judge) - expected).abs() < 0.00000001);
-					assert!((wife_fn(crate::Hit::Hit { deviation: -deviation }, judge) - expected).abs() < 0.00000001);
+					assert!(
+						(wife_fn(crate::Hit::Hit { deviation }, judge) - expected).abs()
+							< 0.00000001
+					);
+					assert!(
+						(wife_fn(
+							crate::Hit::Hit {
+								deviation: -deviation
+							},
+							judge
+						) - expected)
+							.abs() < 0.00000001
+					);
 				}
 			}
 		}

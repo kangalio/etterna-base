@@ -25,7 +25,7 @@ pub trait ScoringSystem: Sized {
 /// Calculates a wifescore from a list of notes per column and hits per column, plus the mine hits
 /// and hold drops. The wifescore algorithm and scoring algorithm used can be chosen via the generic
 /// parameters.
-/// 
+///
 /// Prefer [`rescore_from_note_hits`] if all you need is a judge conversion.
 pub fn rescore<S, W>(
 	lanes: &[crate::NoteAndHitSeconds; 4],
@@ -35,7 +35,7 @@ pub fn rescore<S, W>(
 ) -> crate::Wifescore
 where
 	S: ScoringSystem,
-	W: crate::Wife
+	W: crate::Wife,
 {
 	let mut wifescore_sum = 0.0;
 	let mut num_judged_notes = 0;
@@ -53,23 +53,24 @@ where
 	wifescore_sum += W::HOLD_DROP_WEIGHT * num_hold_drops as f32;
 
 	let wifescore = wifescore_sum / num_judged_notes as f32;
-	crate::Wifescore::from_proportion(wifescore)
-		.expect("Invalid wifescore was generated. Maybe the given notes and hits vectors were empty")
+	crate::Wifescore::from_proportion(wifescore).expect(
+		"Invalid wifescore was generated. Maybe the given notes and hits vectors were empty",
+	)
 }
 
 /// Calculate a wifescore from a replay's note hits, mine hits and hold drops.
-/// 
+///
 /// This function is less generic
 /// than `rescore` because you can't choose the scoring system - it's already engrained within the
 /// note hits. However, note hits are more easily and reliably obtainable than note seconds and hit
 /// seconds columns. Therefore this function should be preferred if only a simple rescore with a
 /// different judge is required.
-/// 
+///
 /// Returns None if the `note_hits` iterator is empty
-/// 
+///
 /// ```rust,no_run
 /// let replay: etterna_base::ReplayV2Fast = todo!();
-/// 
+///
 /// let wifescore_on_j7 = etterna_base::rescore_from_note_hits::<etterna_base::Wife3, _>(
 /// 	replay.notes.iter().map(|note| note.hit),
 /// 	replay.num_mine_hits,
@@ -77,14 +78,14 @@ where
 /// 	etterna_base::J7,
 /// );
 /// ```
-pub fn rescore_from_note_hits<W, I: IntoIterator<Item=crate::Hit>>(
+pub fn rescore_from_note_hits<W, I: IntoIterator<Item = crate::Hit>>(
 	note_hits: I,
 	num_mine_hits: u32,
 	num_hold_drops: u32,
 	judge: &crate::Judge,
 ) -> Option<crate::Wifescore>
 where
-	W: crate::Wife
+	W: crate::Wife,
 {
 	W::apply(note_hits, num_mine_hits, num_hold_drops, judge)
 }
@@ -101,21 +102,22 @@ mod tests {
 		let judge = crate::J4;
 		let wife = |deviation: f32| Wife::calc(crate::Hit::Hit { deviation }, judge);
 
-		let test = |note_and_hit_seconds, target_naive_wifescore: f32, target_matching_wifescore: f32| {
-			let naive_wifescore = {
-				let result = NaiveScorer::evaluate::<Wife>(&note_and_hit_seconds, judge);
-				result.wifescore_sum / result.num_judged_notes as f32
+		let test =
+			|note_and_hit_seconds, target_naive_wifescore: f32, target_matching_wifescore: f32| {
+				let naive_wifescore = {
+					let result = NaiveScorer::evaluate::<Wife>(&note_and_hit_seconds, judge);
+					result.wifescore_sum / result.num_judged_notes as f32
+				};
+				let matching_wifescore = {
+					let result = MatchingScorer::evaluate::<Wife>(&note_and_hit_seconds, judge);
+					result.wifescore_sum / result.num_judged_notes as f32
+				};
+
+				println!("{} == {} ?", naive_wifescore, target_naive_wifescore);
+				println!("{} == {} ?", matching_wifescore, target_matching_wifescore);
+				assert!((naive_wifescore - target_naive_wifescore).abs() < 0.00001);
+				assert!((matching_wifescore - target_matching_wifescore).abs() < 0.00001);
 			};
-			let matching_wifescore = {
-				let result = MatchingScorer::evaluate::<Wife>(&note_and_hit_seconds, judge);
-				result.wifescore_sum / result.num_judged_notes as f32
-			};
-			
-			println!("{} == {} ?", naive_wifescore, target_naive_wifescore);
-			println!("{} == {} ?", matching_wifescore, target_matching_wifescore);
-			assert!((naive_wifescore - target_naive_wifescore).abs() < 0.00001);
-			assert!((matching_wifescore - target_matching_wifescore).abs() < 0.00001);
-		};
 
 		test(
 			crate::NoteAndHitSeconds {
@@ -129,7 +131,7 @@ mod tests {
 		test(
 			crate::NoteAndHitSeconds {
 				note_seconds: vec![1.0, 2.0, 3.0, 4.0],
-				hit_seconds: vec![0.9,      3.1, 4.1],
+				hit_seconds: vec![0.9, 3.1, 4.1],
 			},
 			(wife(0.1) + wife(1.0) + wife(0.1) + wife(0.1)) / 4.0,
 			(wife(0.1) + wife(1.0) + wife(0.1) + wife(0.1)) / 4.0,
@@ -150,7 +152,8 @@ mod tests {
 				hit_seconds: vec![0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20],
 			},
 			(wife(0.04) + wife(0.08) + wife(0.12) + wife(0.16)) / 4.0,
-			(wife(0.0) * 4.0 /* latter four hits */ + wife(1.0) * 4.0 /* first four stray hit punishment */) / 8.0
+			(wife(0.0) * 4.0 /* latter four hits */ + wife(1.0) * 4.0/* first four stray hit punishment */)
+				/ 8.0,
 		);
 
 		test(
@@ -159,7 +162,8 @@ mod tests {
 				hit_seconds: vec![0.01, 0.02, 0.03, 0.04],
 			},
 			(wife(0.04) + wife(0.08) + wife(0.12) + wife(0.16)) / 4.0,
-			(wife(0.01) + wife(0.07) + wife(0.13) + wife(1.0) /* miss */ + wife(1.0) /* stray tap */) / 5.0,
+			(wife(0.01) + wife(0.07) + wife(0.13) + wife(1.0) /* miss */ + wife(1.0)/* stray tap */)
+				/ 5.0,
 		);
 
 		test(
