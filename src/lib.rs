@@ -17,9 +17,6 @@ pub use rating_calc::*;
 mod note_subsets;
 pub use note_subsets::*;
 
-mod savegame;
-pub use savegame::*;
-
 mod structs;
 pub use structs::*;
 
@@ -123,97 +120,108 @@ pub struct SkillTimeline<T> {
 	pub changes: Vec<(T, Skillsets8)>,
 }
 
-/// Generate a timeline of player ratings over time. The input is given in form of an iterator
-/// over tuples of each score's day identifier and the score's skillsets.
-///
-/// "What's a day identifier" you might ask. Well, this function doesn't re-calculate the player's
-/// rating for each and every score. That would be wasteful. Instead, scores are grouped, usually
-/// by day, and the rating is re-calculated for each day.
-///
-/// You can use almost any type you want as a day identifier as long as it can be compared (has a
-/// PartialEq impl).
-///
-/// You can either use the current, 0.70+ algorithm, or the old algorithm from older game versions.
-/// For that, use the `pre_070` parameter.
-///
-/// ```rust,ignore
-/// scores = &[
-/// 	("2020-08-05", ChartSkillsets { ... }),
-/// 	("2020-08-05", ChartSkillsets { ... }),
-/// 	("2020-08-05", ChartSkillsets { ... }),
-/// 	("2020-08-06", ChartSkillsets { ... }),
-/// 	("2020-08-06", ChartSkillsets { ... }),
-/// ];
-///
-/// let timeline = skill_timeline(scores, false);
-/// assert_eq!(timeline.changes.len(), 2);
-/// ```
-pub fn skill_timeline<'a, I, T>(iterator: I, pre_070: bool) -> SkillTimeline<T>
+impl<T: PartialEq + Send> SkillTimeline<T> {
+	/// Generate a timeline of player ratings over time. The input is given in form of an iterator
+	/// over tuples of each score's group identifier and the score's skillsets.
+	///
+	/// "What's a group identifier" you might ask. Well, this function doesn't re-calculate the
+	/// player's rating for each and every score. That would be wasteful. Instead, scores are
+	/// grouped, usually by day, and the rating is re-calculated for each group.
+	///
+	/// You can use almost any type you want as a group identifier as long as it can be compared
+	/// (has a PartialEq impl).
+	///
+	/// You can either use the current, 0.70+ algorithm, or the old algorithm from older game versions.
+	/// For that, use the `pre_070` parameter.
+	///
+	/// ```rust,ignore
+	/// scores = &[
+	/// 	("2020-08-05", ChartSkillsets { ... }),
+	/// 	("2020-08-05", ChartSkillsets { ... }),
+	/// 	("2020-08-05", ChartSkillsets { ... }),
+	/// 	("2020-08-06", ChartSkillsets { ... }),
+	/// 	("2020-08-06", ChartSkillsets { ... }),
+	/// ];
+	///
+	/// let timeline = skill_timeline(scores, false);
+	/// assert_eq!(timeline.changes.len(), 2);
+	/// ```
+	pub fn calculate<I>(iterator: I, pre_070: bool) -> SkillTimeline<T>
+	where
+		I: IntoIterator<Item = (T, Skillsets7)>,
+	{
+		let skillset_calc_function = if pre_070 {
+			rating_calc::calculate_player_skillset_rating_pre_070
+		} else {
+			rating_calc::calculate_player_skillset_rating
+		};
+		let overall_calc_function = if pre_070 {
+			Skillsets7::calc_player_overall_pre_070
+		} else {
+			Skillsets7::calc_player_overall
+		};
+
+		let iterator = iterator.into_iter();
+		let approx_num_scores = iterator.size_hint().1.unwrap_or(iterator.size_hint().0);
+		let mut rating_vectors: [Vec<f32>; 7] = [
+			Vec::with_capacity(approx_num_scores),
+			Vec::with_capacity(approx_num_scores),
+			Vec::with_capacity(approx_num_scores),
+			Vec::with_capacity(approx_num_scores),
+			Vec::with_capacity(approx_num_scores),
+			Vec::with_capacity(approx_num_scores),
+			Vec::with_capacity(approx_num_scores),
+		];
+
+		// naming of "day" in here is legacy; pretend it says "group" instead (as per docs above)
+		let mut day_indices: Vec<(T, usize)> = vec![];
+		let mut prev_day_id = None;
+		for (day_id, ssr) in iterator {
+			rating_vectors[0].push(ssr.stream);
+			rating_vectors[1].push(ssr.jumpstream);
+			rating_vectors[2].push(ssr.handstream);
+			rating_vectors[3].push(ssr.stamina);
+			rating_vectors[4].push(ssr.jackspeed);
+			rating_vectors[5].push(ssr.chordjack);
+			rating_vectors[6].push(ssr.technical);
+
+			if let Some(prev_day_id) = prev_day_id.take() {
+				if prev_day_id != day_id {
+					day_indices.push((prev_day_id, rating_vectors[0].len()));
+				}
+			}
+			prev_day_id = Some(day_id);
+		}
+		if let Some(prev_day_id) = prev_day_id {
+			day_indices.push((prev_day_id, rating_vectors[0].len()));
+		}
+
+		let changes = par_iter_maybe(day_indices)
+			.map(|(day_id, i)| {
+				(
+					day_id,
+					overall_calc_function(&Skillsets7 {
+						stream: (skillset_calc_function)(&rating_vectors[0][..i]),
+						jumpstream: (skillset_calc_function)(&rating_vectors[1][..i]),
+						handstream: (skillset_calc_function)(&rating_vectors[2][..i]),
+						stamina: (skillset_calc_function)(&rating_vectors[3][..i]),
+						jackspeed: (skillset_calc_function)(&rating_vectors[4][..i]),
+						chordjack: (skillset_calc_function)(&rating_vectors[5][..i]),
+						technical: (skillset_calc_function)(&rating_vectors[6][..i]),
+					}),
+				)
+			})
+			.collect();
+
+		Self { changes }
+	}
+}
+
+#[deprecated(note = "Use SkillTimeline::calculate instead")]
+pub fn skill_timeline<I, T>(iterator: I, pre_070: bool) -> SkillTimeline<T>
 where
 	I: IntoIterator<Item = (T, Skillsets7)>,
-	T: 'a + PartialEq + Send,
+	T: PartialEq + Send,
 {
-	let skillset_calc_function = if pre_070 {
-		rating_calc::calculate_player_skillset_rating_pre_070
-	} else {
-		rating_calc::calculate_player_skillset_rating
-	};
-	let overall_calc_function = if pre_070 {
-		Skillsets7::calc_player_overall_pre_070
-	} else {
-		Skillsets7::calc_player_overall
-	};
-
-	let iterator = iterator.into_iter();
-	let approx_num_scores = iterator.size_hint().1.unwrap_or(iterator.size_hint().0);
-	let mut rating_vectors: [Vec<f32>; 7] = [
-		Vec::with_capacity(approx_num_scores),
-		Vec::with_capacity(approx_num_scores),
-		Vec::with_capacity(approx_num_scores),
-		Vec::with_capacity(approx_num_scores),
-		Vec::with_capacity(approx_num_scores),
-		Vec::with_capacity(approx_num_scores),
-		Vec::with_capacity(approx_num_scores),
-	];
-
-	let mut day_indices: Vec<(T, usize)> = vec![];
-	let mut prev_day_id = None;
-	for (day_id, ssr) in iterator {
-		rating_vectors[0].push(ssr.stream);
-		rating_vectors[1].push(ssr.jumpstream);
-		rating_vectors[2].push(ssr.handstream);
-		rating_vectors[3].push(ssr.stamina);
-		rating_vectors[4].push(ssr.jackspeed);
-		rating_vectors[5].push(ssr.chordjack);
-		rating_vectors[6].push(ssr.technical);
-
-		if let Some(prev_day_id) = prev_day_id.take() {
-			if prev_day_id != day_id {
-				day_indices.push((prev_day_id, rating_vectors[0].len()));
-			}
-		}
-		prev_day_id = Some(day_id);
-	}
-	if let Some(prev_day_id) = prev_day_id {
-		day_indices.push((prev_day_id, rating_vectors[0].len()));
-	}
-
-	let changes = par_iter_maybe(day_indices)
-		.map(|(day_id, i)| {
-			(
-				day_id,
-				overall_calc_function(&Skillsets7 {
-					stream: (skillset_calc_function)(&rating_vectors[0][..i]),
-					jumpstream: (skillset_calc_function)(&rating_vectors[1][..i]),
-					handstream: (skillset_calc_function)(&rating_vectors[2][..i]),
-					stamina: (skillset_calc_function)(&rating_vectors[3][..i]),
-					jackspeed: (skillset_calc_function)(&rating_vectors[4][..i]),
-					chordjack: (skillset_calc_function)(&rating_vectors[5][..i]),
-					technical: (skillset_calc_function)(&rating_vectors[6][..i]),
-				}),
-			)
-		})
-		.collect();
-
-	SkillTimeline { changes }
+	SkillTimeline::calculate(iterator, pre_070)
 }
