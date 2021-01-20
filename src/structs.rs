@@ -154,7 +154,8 @@ pub enum NoteType {
 	Fake,
 }
 
-/// Wifescore struct. Guaranteed to be a valid value, i.e. not infinity and not NaN
+/// Wifescore struct. Guaranteed to be a valid value, i.e. <= 100% and not NaN (may be negative
+/// infinity though)
 #[derive(PartialEq, PartialOrd, Default, Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Wifescore {
@@ -162,6 +163,21 @@ pub struct Wifescore {
 }
 
 impl Wifescore {
+	pub const D_THRESHOLD: Self = Self {
+		proportion: f32::NEG_INFINITY,
+	};
+	pub const C_THRESHOLD: Self = Self { proportion: 0.60 };
+	pub const B_THRESHOLD: Self = Self { proportion: 0.70 };
+	pub const A_THRESHOLD: Self = Self { proportion: 0.80 };
+	pub const AA_THRESHOLD: Self = Self { proportion: 0.93 };
+	pub const AAA_THRESHOLD: Self = Self { proportion: 0.997 };
+	pub const AAAA_THRESHOLD: Self = Self {
+		proportion: 0.99955,
+	};
+	pub const AAAAA_THRESHOLD: Self = Self {
+		proportion: 0.99996,
+	};
+
 	/// Makes a Wifescore from a value, assumed to be scaled to a max of 100
 	///
 	/// Returns None if the percentage is over 100%, or if it is infinite or NaN
@@ -173,7 +189,7 @@ impl Wifescore {
 	///
 	/// Returns None if the proportion is over 1.0 (100%), or if it is infinite or NaN
 	pub fn from_proportion(proportion: f32) -> Option<Self> {
-		if proportion.is_infinite() || proportion.is_nan() || proportion > 1.0 {
+		if proportion.is_nan() || proportion > 1.0 {
 			None
 		} else {
 			Some(Self { proportion })
