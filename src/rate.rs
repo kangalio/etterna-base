@@ -47,7 +47,7 @@ impl Rate {
 	/// Returns an f32 representation of this rate.
 	///
 	/// ```rust
-	/// # use etterna_base::Rate;
+	/// # use etterna::Rate;
 	/// assert_eq!(Rate::from_string("1.40").unwrap().as_f32(), 1.4);
 	/// ```
 	pub fn as_f32(self) -> f32 {
@@ -58,7 +58,7 @@ impl Rate {
 	/// function returns an integer.
 	///
 	/// ```rust
-	/// # use etterna_base::Rate;
+	/// # use etterna::Rate;
 	/// assert_eq!(Rate::from_string("1.45").unwrap().as_x20(), 29);
 	/// ```
 	pub fn as_x20(self) -> u32 {

@@ -8,8 +8,8 @@ macro_rules! ok_or_continue {
 			Ok(value) => value,
 			Err(_e) => {
 				continue;
-				}
 			}
+		}
 	};
 }
 
@@ -20,7 +20,7 @@ macro_rules! some_or_continue {
 		match $e {
 			Some(value) => value,
 			None => continue,
-			}
+		}
 	};
 }
 
@@ -222,8 +222,8 @@ mod tests {
 						 right: `{:?}`
 						 delta: `{:?}`",
 					&left, &right, &delta
-					);
-				}
+				);
+			}
 		};
 	}
 

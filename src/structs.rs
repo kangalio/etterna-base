@@ -467,7 +467,7 @@ impl Hit {
 	/// `if let Hit::Miss = hit` instead.
 	///
 	/// ```rust
-	/// # use etterna_base::{Hit, J1, J4};
+	/// # use etterna::{Hit, J1, J4};
 	/// assert!(Hit::Hit { deviation: -0.02 }.is_considered_miss(J4) == false);
 	/// assert!(Hit::Miss.is_considered_miss(J4) == true);
 	/// assert!(Hit::Hit { deviation: 0.20 }.is_considered_miss(J1) == false);
@@ -485,7 +485,7 @@ impl Hit {
 	/// here.
 	///
 	/// ```rust
-	/// # use etterna_base::{Hit, J1, J4};
+	/// # use etterna::{Hit, J1, J4};
 	/// assert!(Hit::Hit { deviation: -0.02 }.was_missed() == false);
 	/// assert!(Hit::Miss.was_missed() == true);
 	/// assert!(Hit::Hit { deviation: 0.20 }.was_missed() == false);
@@ -526,7 +526,7 @@ impl NoteRow {
 	/// Returns the number of notes that this row spans
 	///
 	/// ```rust
-	/// # use etterna_base::NoteRow;
+	/// # use etterna::NoteRow;
 	/// assert_eq!(NoteRow::from_bits(0b10101).width(), 5);
 	/// assert_eq!(NoteRow::from_bits(0b0011).width(), 2); // be careful!
 	/// ```

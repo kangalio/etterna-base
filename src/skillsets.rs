@@ -202,8 +202,8 @@ impl Skillset7 {
 	/// Useful for tasks that require operating on all skillsets individually
 	///
 	/// ```rust,no_run
-	/// # use etterna_base::Skillset7;
-	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
+	/// # use etterna::Skillset7;
+	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
 	/// for &ss in Skillset7::list() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -225,8 +225,8 @@ impl Skillset7 {
 	/// Useful for tasks that require operating on all skillsets individually
 	///
 	/// ```rust,no_run
-	/// # use etterna_base::Skillset7;
-	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
+	/// # use etterna::Skillset7;
+	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
 	/// for ss in Skillset7::iter() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -238,7 +238,7 @@ impl Skillset7 {
 	/// Self-explanatory.
 	///
 	/// ```rust
-	/// # use etterna_base::{Skillset7, Skillset8};
+	/// # use etterna::{Skillset7, Skillset8};
 	/// assert_eq!(Skillset7::Stream.into_skillset8(), Skillset8::Stream);
 	/// assert_eq!(Skillset7::Chordjack.into_skillset8(), Skillset8::Chordjack);
 	/// ```
@@ -277,7 +277,7 @@ impl Skillset8 {
 	///
 	/// # Example
 	/// ```rust
-	/// # use etterna_base::Skillset8;
+	/// # use etterna::Skillset8;
 	/// assert_eq!(Skillset8::from_user_input("js"), Some(Skillset8::Jumpstream));
 	/// assert_eq!(Skillset8::from_user_input("Jacks"), Some(Skillset8::Jackspeed));
 	/// assert_eq!(Skillset8::from_user_input("JACKSPEED"), Some(Skillset8::Jackspeed));
@@ -302,8 +302,8 @@ impl Skillset8 {
 	/// Useful for tasks that require operating on all skillsets individually
 	///
 	/// ```rust,no_run
-	/// # use etterna_base::Skillset8;
-	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
+	/// # use etterna::Skillset8;
+	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
 	/// for &ss in Skillset8::list() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -326,8 +326,8 @@ impl Skillset8 {
 	/// Useful for tasks that require operating on all skillsets individually
 	///
 	/// ```rust,no_run
-	/// # use etterna_base::Skillset8;
-	/// # let skillsets: etterna_base::UserSkillsets = unimplemented!();
+	/// # use etterna::Skillset8;
+	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
 	/// for ss in Skillset8::iter() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -339,7 +339,7 @@ impl Skillset8 {
 	/// Convert into a Skillset7, converting Overall into None along the way.
 	///
 	/// ```rust
-	/// # use etterna_base::{Skillset8, Skillset7};
+	/// # use etterna::{Skillset8, Skillset7};
 	/// assert_eq!(Skillset8::Stream.into_skillset7(), Some(Skillset7::Stream));
 	/// assert_eq!(Skillset8::Overall.into_skillset7(), None);
 	/// ```

@@ -69,13 +69,13 @@ where
 /// Returns None if the `note_hits` iterator is empty
 ///
 /// ```rust,no_run
-/// let replay: etterna_base::ReplayV2Fast = todo!();
+/// let replay: etterna::ReplayV2Fast = todo!();
 ///
-/// let wifescore_on_j7 = etterna_base::rescore_from_note_hits::<etterna_base::Wife3, _>(
+/// let wifescore_on_j7 = etterna::rescore_from_note_hits::<etterna::Wife3, _>(
 /// 	replay.notes.iter().map(|note| note.hit),
 /// 	replay.num_mine_hits,
 /// 	replay.num_hold_drops,
-/// 	etterna_base::J7,
+/// 	etterna::J7,
 /// );
 /// ```
 pub fn rescore_from_note_hits<W, I: IntoIterator<Item = crate::Hit>>(
