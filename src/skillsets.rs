@@ -101,6 +101,18 @@ impl Skillsets7 {
 
 		self.with_overall(max_skillset)
 	}
+
+	pub fn generate<F: FnMut(crate::Skillset7) -> f32>(mut generator: F) -> Self {
+		Self {
+			stream: (generator)(crate::Skillset7::Stream),
+			jumpstream: (generator)(crate::Skillset7::Jumpstream),
+			handstream: (generator)(crate::Skillset7::Handstream),
+			stamina: (generator)(crate::Skillset7::Stamina),
+			jackspeed: (generator)(crate::Skillset7::Jackspeed),
+			chordjack: (generator)(crate::Skillset7::Chordjack),
+			technical: (generator)(crate::Skillset7::Technical),
+		}
+	}
 }
 
 impl From<Skillsets8> for Skillsets7 {
@@ -146,6 +158,19 @@ impl Skillsets8 {
 			jackspeed: self.jackspeed,
 			chordjack: self.chordjack,
 			technical: self.technical,
+		}
+	}
+
+	pub fn generate<F: FnMut(crate::Skillset8) -> f32>(mut generator: F) -> Self {
+		Self {
+			overall: (generator)(crate::Skillset8::Overall),
+			stream: (generator)(crate::Skillset8::Stream),
+			jumpstream: (generator)(crate::Skillset8::Jumpstream),
+			handstream: (generator)(crate::Skillset8::Handstream),
+			stamina: (generator)(crate::Skillset8::Stamina),
+			jackspeed: (generator)(crate::Skillset8::Jackspeed),
+			chordjack: (generator)(crate::Skillset8::Chordjack),
+			technical: (generator)(crate::Skillset8::Technical),
 		}
 	}
 }
