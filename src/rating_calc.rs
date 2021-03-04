@@ -90,9 +90,9 @@ mod tests {
 
 	#[test]
 	fn test_everything() {
-		// These test values are derived with a C++ program containing standalone versions of the
-		// actual algorithm code snippets from Etterna itself
-		#[allow(clippy::excessive_precision)]
+		// These test values come from a C++ program containing the actual algorithms from Etterna
+		// itself, only slightly modified to be standalone
+		#[allow(clippy::excessive_precision)] // yes, we're being excessively precise around here
 		let test_values: &[([f32; 7], f32, f32, f32, f32)] = &[
 			(
 				[21.0, 24.0, 23.0, 14.0, 17.0, 25.0, 24.0],
