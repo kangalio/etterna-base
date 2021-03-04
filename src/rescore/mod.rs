@@ -67,17 +67,6 @@ where
 /// different judge is required.
 ///
 /// Returns None if the `note_hits` iterator is empty
-///
-/// ```rust,no_run
-/// let replay: etterna::ReplayV2Fast = todo!();
-///
-/// let wifescore_on_j7 = etterna::rescore_from_note_hits::<etterna::Wife3, _>(
-/// 	replay.notes.iter().map(|note| note.hit),
-/// 	replay.num_mine_hits,
-/// 	replay.num_hold_drops,
-/// 	etterna::J7,
-/// );
-/// ```
 pub fn rescore_from_note_hits<W, I: IntoIterator<Item = crate::Hit>>(
 	note_hits: I,
 	num_mine_hits: u32,

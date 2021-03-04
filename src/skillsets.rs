@@ -203,7 +203,7 @@ impl Skillset7 {
 	///
 	/// ```rust,no_run
 	/// # use etterna::Skillset7;
-	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
+	/// # let skillsets: etterna::Skillsets7 = unimplemented!();
 	/// for &ss in Skillset7::list() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -226,7 +226,7 @@ impl Skillset7 {
 	///
 	/// ```rust,no_run
 	/// # use etterna::Skillset7;
-	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
+	/// # let skillsets: etterna::Skillsets7 = unimplemented!();
 	/// for ss in Skillset7::iter() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -303,7 +303,7 @@ impl Skillset8 {
 	///
 	/// ```rust,no_run
 	/// # use etterna::Skillset8;
-	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
+	/// # let skillsets: etterna::Skillsets8 = unimplemented!();
 	/// for &ss in Skillset8::list() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
@@ -327,7 +327,7 @@ impl Skillset8 {
 	///
 	/// ```rust,no_run
 	/// # use etterna::Skillset8;
-	/// # let skillsets: etterna::UserSkillsets = unimplemented!();
+	/// # let skillsets: etterna::Skillsets8 = unimplemented!();
 	/// for ss in Skillset8::iter() {
 	/// 	println!("{}: {}", ss, skillsets.get(ss));
 	/// }
