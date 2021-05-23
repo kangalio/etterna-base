@@ -255,6 +255,23 @@ impl Skillset7 {
 	}
 }
 
+#[derive(Debug)]
+pub struct UnrecognizedSkillset(String);
+impl std::fmt::Display for UnrecognizedSkillset {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "Unrecognized skillset: \"{}\"", self.0)
+	}
+}
+impl std::error::Error for UnrecognizedSkillset {}
+
+impl std::str::FromStr for Skillset7 {
+	type Err = UnrecognizedSkillset;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::from_user_input(s).ok_or_else(|| UnrecognizedSkillset(s.to_owned()))
+	}
+}
+
 /// Skillsets enum, including overall
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -354,6 +371,14 @@ impl Skillset8 {
 			Self::Chordjack => Some(Skillset7::Chordjack),
 			Self::Technical => Some(Skillset7::Technical),
 		}
+	}
+}
+
+impl std::str::FromStr for Skillset8 {
+	type Err = UnrecognizedSkillset;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::from_user_input(s).ok_or_else(|| UnrecognizedSkillset(s.to_owned()))
 	}
 }
 
