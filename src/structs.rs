@@ -163,7 +163,7 @@ pub struct Wifescore {
 }
 
 impl Wifescore {
-	pub const D_THRESHOLD: Self = Self {
+	pub const NEG_INFINITY: Self = Self {
 		proportion: f32::NEG_INFINITY,
 	};
 	pub const C_THRESHOLD: Self = Self { proportion: 0.60 };
