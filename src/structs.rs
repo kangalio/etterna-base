@@ -190,11 +190,11 @@ impl Wifescore {
 	///
 	/// Returns None if the proportion is over 1.0 (100%), or if it is infinite or NaN
 	pub fn from_proportion(proportion: f32) -> Option<Self> {
-		if proportion.is_nan() || proportion > 1.0 {
-			None
-		} else {
-			Some(Self { proportion })
-		}
+		// if proportion.is_nan() || proportion > 1.0 {
+		// None
+		// } else {
+		Some(Self { proportion })
+		// }
 	}
 
 	/// Returns the wifescore, scaled to a max of 100
