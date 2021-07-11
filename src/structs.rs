@@ -175,7 +175,7 @@ impl Wifescore {
 		proportion: 0.99955,
 	};
 	pub const AAAAA_THRESHOLD: Self = Self {
-		proportion: 0.99996,
+		proportion: 0.999935,
 	};
 	pub const HUNDRED_PERCENT: Self = Self { proportion: 1.0 };
 
