@@ -177,6 +177,7 @@ impl Wifescore {
 	pub const AAAAA_THRESHOLD: Self = Self {
 		proportion: 0.99996,
 	};
+	pub const HUNDRED_PERCENT: Self = Self { proportion: 1.0 };
 
 	/// Makes a Wifescore from a value, assumed to be scaled to a max of 100
 	///
